@@ -17,7 +17,7 @@ next() {
 }
 
 show_disks() {
-    lsblk -p -I 8 -o NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,MOUNTPOINTS
+    lsblk -po NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,MOUNTPOINTS
 }
 
 detect_efi() {
