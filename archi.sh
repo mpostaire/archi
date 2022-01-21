@@ -54,7 +54,8 @@ partition_disks() {
             done ) break;;
             * ) if ! cfdisk "$disk"; then
                 printf "Invalid input.\n\n"
-            fi;;
+            fi
+            next;;
         esac
     done
 }
