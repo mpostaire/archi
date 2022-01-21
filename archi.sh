@@ -48,7 +48,7 @@ update_system_clock() {
 partition_disks() {
     while true; do
         show_disks
-        printf "\nEnter the disk to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
+        printf "\nEnter a disk to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
         read -r disk
         case $disk in
             done ) break;;
@@ -63,7 +63,7 @@ partition_disks() {
 format_partitions() {
     while true; do
         show_disks
-        printf "\nEnter the partition to format ('/dev/sda1' for example) and type 'done' when there is nothing else to do:\n> "
+        printf "\nEnter a partition to format ('/dev/sda1' for example) and type 'done' when there is nothing else to do:\n> "
         read -r part
         case $part in
             done ) break;;
@@ -79,12 +79,10 @@ mount_filesystems() {
         show_disks
         printf "\nEnter the partition to use as root volume ('/dev/sda1' for example):\n> "
         read -r part
-        case $part in
-            done ) break;;
-            * ) if ! mount "$part" /mnt; then
-                printf "Invalid input.\n\n"
-            fi;;
-        esac
+        if mount "$part" /mnt; then
+            break
+        fi
+        printf "Invalid input.\n\n"
     done
 
     next
