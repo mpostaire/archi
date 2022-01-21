@@ -75,6 +75,8 @@ format_partitions() {
 }
 
 mount_filesystems() {
+    umount -a > /dev/null 2>&1
+
     while true; do
         show_disks
         printf "\nEnter the partition to use as root volume ('/dev/sda1' for example):\n> "
