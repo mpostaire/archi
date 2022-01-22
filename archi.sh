@@ -97,7 +97,7 @@ mount_filesystems() {
         read -r mountpoint
         case $mountpoint in
             done ) break;;
-            /* ) mkdir -p "$mountpoint"
+            /* ) mkdir -p /mnt"$mountpoint"
                 while true; do
                     printf "Select the partition to mount for '%s' ('/dev/sda2' for example):\n> " "$mountpoint"
                     read -r part
