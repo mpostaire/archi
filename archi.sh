@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
+shopt -s extglob
 
 next() {
     clear
@@ -118,7 +119,7 @@ setup_swapfile() {
         printf "\nEnter the swapfile size (in MiB):\n> "
         read -r ssize
         case $ssize in
-            ^[0-9]+$ )
+            +([0-9]) )
                 if dd if=/dev/zero of=/mnt/swapfile bs=1M count="$ssize" status=progress; then
                     chmod 600 /mnt/swapfile
                     mkswap /mnt/swapfile
@@ -136,18 +137,18 @@ make_fstab() {
 
 ##################################################
 
-detect_efi
-next
-select_keyboard_layout
-next
-update_system_clock
-next
-partition_disks
-next
-format_partitions
-next
-mount_filesystems
-next
+# detect_efi
+# next
+# select_keyboard_layout
+# next
+# update_system_clock
+# next
+# partition_disks
+# next
+# format_partitions
+# next
+# mount_filesystems
+# next
 setup_swapfile
 
 # INSTALLATION
