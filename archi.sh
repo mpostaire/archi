@@ -137,18 +137,18 @@ make_fstab() {
 
 ##################################################
 
-# detect_efi
-# next
-# select_keyboard_layout
-# next
-# update_system_clock
-# next
-# partition_disks
-# next
-# format_partitions
-# next
-# mount_filesystems
-# next
+detect_efi
+next
+select_keyboard_layout
+next
+update_system_clock
+next
+partition_disks
+next
+format_partitions
+next
+mount_filesystems
+next
 setup_swapfile
 
 # INSTALLATION
