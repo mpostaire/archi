@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -eu
 
@@ -75,7 +75,7 @@ format_partitions() {
 }
 
 mount_filesystems() {
-    umount -a > /dev/null 2>&1
+    umount -a > /dev/null 2>&1 || true
 
     while true; do
         show_disks
