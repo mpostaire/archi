@@ -53,10 +53,10 @@ partition_disks() {
         read -r disk
         case $disk in
             done ) break;;
-            * ) if ! cfdisk "$disk"; then
-                printf "Invalid input.\n\n"
-            fi
-            next;;
+            * )
+                if ! cfdisk "$disk"; then
+                    printf "Invalid input.\n\n"
+                fi;;
         esac
     done
 }
@@ -68,10 +68,11 @@ format_partitions() {
         read -r part
         case $part in
             done ) break;;
-            * ) if ! mkfs.ext4 "$part"; then
-                printf "Invalid input.\n\n"
-            fi
-            sleep 1;; # give time for lsblk to show updated fs
+            * )
+                if ! mkfs.ext4 "$part"; then
+                    printf "Invalid input.\n\n"
+                fi
+                sleep 1;; # give time for lsblk to show updated fs
         esac
     done
 }
@@ -103,10 +104,11 @@ mount_filesystems() {
                     read -r part
                     case $part in
                         done ) break;;
-                        * ) if ! mount "$part" /mnt"$mountpoint"; then
-                            printf "Invalid input.\n\n"
-                            break
-                        fi;;
+                        * )
+                            if ! mount "$part" /mnt"$mountpoint"; then
+                                printf "Invalid input.\n\n"
+                                break
+                            fi;;
                     esac
                 done;;
             * ) printf "Invalid input.\n\n";;
@@ -116,16 +118,16 @@ mount_filesystems() {
 
 setup_swapfile() {
     while true; do
-        printf "\nEnter the swapfile size (in MiB):\n> "
+        printf "\nEnter the swapfile size in MiB (0 = no swap):\n> "
         read -r ssize
         case $ssize in
+            0 ) break;;
             +([0-9]) )
                 if dd if=/dev/zero of=/mnt/swapfile bs=1M count="$ssize" status=progress; then
                     chmod 600 /mnt/swapfile
                     mkswap /mnt/swapfile
                     break
-                fi
-                printf "Invalid input.\n\n";;
+                fi;;
             * ) printf "Invalid input.\n\n";;
         esac
     done
