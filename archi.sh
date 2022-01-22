@@ -56,7 +56,8 @@ partition_disks() {
             * )
                 if ! cfdisk "$disk"; then
                     printf "Invalid input.\n\n"
-                fi;;
+                fi
+                next;;
         esac
     done
 }
@@ -98,19 +99,13 @@ mount_filesystems() {
         read -r mountpoint
         case $mountpoint in
             done ) break;;
-            /* ) mkdir -p /mnt"$mountpoint"
-                while true; do
-                    printf "Select the partition to mount for '%s' ('/dev/sda2' for example):\n> " "$mountpoint"
-                    read -r part
-                    case $part in
-                        done ) break;;
-                        * )
-                            if ! mount "$part" /mnt"$mountpoint"; then
-                                printf "Invalid input.\n\n"
-                                break
-                            fi;;
-                    esac
-                done;;
+            /* )
+                mkdir -p /mnt"$mountpoint"
+                printf "Select the partition to mount for '%s' ('/dev/sda2' for example):\n> " "$mountpoint"
+                read -r part
+                if ! mount "$part" /mnt"$mountpoint"; then
+                    printf "Invalid input.\n\n"
+                fi;;
             * ) printf "Invalid input.\n\n";;
         esac
     done
