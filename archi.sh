@@ -98,11 +98,11 @@ mount_filesystems() {
             done ) break;;
             /* ) mkdir -p "$mountpoint"
                 while true; do
-                    printf "Select the partition to mount for '%s' ('/dev/sda1' for example):\n> " "$mountpoint"
+                    printf "Select the partition to mount for '%s' ('/dev/sda2' for example):\n> " "$mountpoint"
                     read -r part
                     case $part in
                         done ) break;;
-                        * ) if ! mount "$part" /mnt/"$mountpoint"; then
+                        * ) if ! mount "$part" /mnt"$mountpoint"; then
                             printf "Invalid input.\n\n"
                             break
                         fi;;
