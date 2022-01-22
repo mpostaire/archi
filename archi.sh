@@ -69,13 +69,14 @@ format_partitions() {
             done ) break;;
             * ) if ! mkfs.ext4 "$part"; then
                 printf "Invalid input.\n\n"
-            fi;;
+            fi
+            sleep 1;; # give time for lsblk to show updated fs
         esac
     done
 }
 
 mount_filesystems() {
-    umount -a > /dev/null 2>&1 || true
+    umount -a > /dev/null 2>&1 || true # prevent umount failure to exit this script
 
     while true; do
         show_disks
@@ -118,16 +119,19 @@ setup_swapfile() {
         read -r ssize
         case $ssize in
             ^[0-9]+$ )
-                if dd if=/dev/zero of=/swapfile bs=1M count="$ssize" status=progress; then
-                    chmod 600 /swapfile
-                    mkswap /swapfile
-                    printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /etc/fstab
+                if dd if=/dev/zero of=/mnt/swapfile bs=1M count="$ssize" status=progress; then
+                    chmod 600 /mnt/swapfile
+                    mkswap /mnt/swapfile
                     break
                 fi
                 printf "Invalid input.\n\n";;
             * ) printf "Invalid input.\n\n";;
         esac
     done
+}
+
+make_fstab() {
+    printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /etc/fstab
 }
 
 ##################################################
