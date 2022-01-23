@@ -165,12 +165,12 @@ install_grub() {
         read -r drive
         if arch-chroot /mnt grub-install --target=i386-pc "$drive"; then
             sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-            printf "\Edit grub config? [y/N]:\n> "
+            printf "\nEdit grub config? [y/N]:\n> "
             read -r sel
             case $sel in
                 y|Y ) nano /mnt/etc/default/grub;;
             esac
-            arch-chroot /mnt grub-mkconfig -o /mnt/boot/grub/grub.cfg
+            arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
             break;
         fi
     done
