@@ -5,6 +5,8 @@
 set -eu
 shopt -s extglob
 
+# TODO add left right arrow support for inputs to move cursor
+
 next() {
     clear
     printf "
@@ -138,7 +140,7 @@ install_base() {
     esac
 
     printf "Installing the base system\n"
-    pacstrap /mnt base base-devel linux linux-firmware linux-headers "$microcode" networkmanager grub fstrim reflector zsh nano git wpa_supplicant os-prober dosfstools
+    pacstrap /mnt base base-devel linux linux-firmware linux-headers "$microcode" networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
 
     printf "Enabling base services\n"
     systemctl enable NetworkManager --root=/mnt
