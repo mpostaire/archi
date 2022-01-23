@@ -272,14 +272,14 @@ create_user() {
 }
 
 install_preset() {
-    printf "\Install the Gnome preset? [Y/n]:\n> "
+    printf "Install the Gnome preset? [Y/n]:\n> "
     read -r sel
     case $sel in
         n|N ) return;;
     esac
 
     while true; do
-        printf "Select the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n3)\txf86-video-intel\n\t4)nvidia\n\n> "
+        printf "Select the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3)xf86-video-intel\n\t4)nvidia\n\n> "
         read -r vdriver
         case $vdriver in
             1|xf86-video-amdgpu ) vdriver="xf86-video-amdgpu vulkan-radeon"; break;;
@@ -338,6 +338,7 @@ setup_swapfile
 
 next
 install_base
+install_grub
 set_shell_timezone_clock_locales
 next
 ask_hostname
