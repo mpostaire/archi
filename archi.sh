@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# thanks to https://github.com/classy-giraffe/easy-arch
+# Thanks to https://github.com/classy-giraffe/easy-arch
 
 set -eu
 shopt -s extglob
@@ -135,11 +135,50 @@ setup_swapfile() {
     done
 }
 
-install_base() {
+detect_microcode() {
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* ) microcode="intel-ucode";;
         * ) microcode="amd-ucode";;
     esac
+}
+
+detect_virt() {
+    hypervisor=$(systemd-detect-virt --vm)
+    case $hypervisor in
+        kvm )
+            print "KVM has been detected"
+            print "Installing guest tools"
+            pacstrap /mnt qemu-guest-agent
+            print "Enabling specific services for the guest tools"
+            systemctl enable qemu-guest-agent --root=/mnt;;
+        vmware )
+            print "VMWare Workstation/ESXi has been detected"
+            print "Installing guest tools"
+            pacstrap /mnt open-vm-tools
+            print "Enabling specific services for the guest tools"
+            systemctl enable vmtoolsd --root=/mnt
+            systemctl enable vmware-vmblock-fuse --root=/mnt;;
+        oracle )
+            print "VirtualBox has been detected"
+            print "Installing guest tools"
+            pacstrap /mnt virtualbox-guest-utils
+            print "Enabling specific services for the guest tools"
+            systemctl enable vboxservice --root=/mnt;;
+        microsoft )
+            print "Hyper-V has been detected"
+            print "Installing guest tools"
+            pacstrap /mnt hyperv
+            print "Enabling specific services for the guest tools"
+            systemctl enable hv_fcopy_daemon --root=/mnt
+            systemctl enable hv_kvp_daemon --root=/mnt
+            systemctl enable hv_vss_daemon --root=/mnt;;
+        * ) ;;
+    esac
+}
+
+install_base() {
+    detect_microcode
+    detect_virt
 
     printf "Installing the base system\n"
     pacstrap /mnt base base-devel linux linux-firmware linux-headers "$microcode" networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
@@ -177,7 +216,6 @@ install_grub() {
 }
 
 set_shell_timezone_clock_locales() {
-    printf "Chroot into newly installed system\n"
     arch-chroot /mnt /bin/bash << EOF
 
     printf "Setting zsh as the root shell\n"
@@ -277,8 +315,8 @@ install_preset() {
         n|N ) return;;
     esac
 
-    while true; do
-        printf "\nSelect the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3)xf86-video-intel\n\t4)nvidia\n\n> "
+    while [ "$hypervisor" = "none" ]; do
+        printf "\nSelect the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3) xf86-video-intel\n\t4) nvidia\n\n> "
         read -r vdriver
         case $vdriver in
             1|xf86-video-amdgpu ) vdriver="xf86-video-amdgpu vulkan-radeon"; break;;
@@ -290,7 +328,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    arch-chroot /mnt pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
