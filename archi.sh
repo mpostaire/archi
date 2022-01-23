@@ -315,6 +315,7 @@ install_preset() {
         n|N ) return;;
     esac
 
+    vdriver=""
     while [ "$hypervisor" = "none" ]; do
         printf "\nSelect the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3) xf86-video-intel\n\t4) nvidia\n\n> "
         read -r vdriver
@@ -328,7 +329,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    arch-chroot /mnt pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    arch-chroot /mnt pacman -Syu --needed --noconfirm "$vdriver" gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
