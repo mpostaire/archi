@@ -278,7 +278,7 @@ install_preset() {
     esac
 
     while true; do
-        printf "Select the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3)xf86-video-intel\n\t4)nvidia\n\n> "
+        printf "\nSelect the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3)xf86-video-intel\n\t4)nvidia\n\n> "
         read -r vdriver
         case $vdriver in
             1|xf86-video-amdgpu ) vdriver="xf86-video-amdgpu vulkan-radeon"; break;;
@@ -290,7 +290,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex corectrl gnome-software-packagekit-plugin bat fzf chafa
+    pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
@@ -305,7 +305,7 @@ install_preset() {
     printf "Enabling access to the AUR"
     git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si && cd .. && rm -rf yay
     printf "Installing the AUR packages"
-    yay -S --noconfirm chrome-gnome-shell megasync-bin nautilus-megasync rhythmbox-plugin-alternative-toolbar ttf-ms-fonts visual-studio-code-bin nautilus-admin-git
+    yay -S --noconfirm chrome-gnome-shell megasync-bin nautilus-megasync rhythmbox-plugin-alternative-toolbar ttf-ms-fonts visual-studio-code-bin nautilus-admin-git corectrl
 }
 
 epilogue() {
