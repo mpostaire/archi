@@ -21,7 +21,7 @@ next() {
 "
 }
 
-show_disks() {
+show_drives() {
     lsblk -po NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,MOUNTPOINTS
 }
 
@@ -50,15 +50,15 @@ update_system_clock() {
     timedatectl set-ntp true
 }
 
-partition_disks() {
+partition_drives() {
     while true; do
-        show_disks
-        printf "\nEnter a disk to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
-        read -r disk
-        case $disk in
+        show_drives
+        printf "\nEnter a drive to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
+        read -r drive
+        case $drive in
             done ) break;;
             * )
-                if ! cfdisk "$disk"; then
+                if ! cfdisk "$drive"; then
                     printf "Invalid input.\n\n"
                 fi
                 next;;
@@ -68,7 +68,7 @@ partition_disks() {
 
 format_partitions() {
     while true; do
-        show_disks
+        show_drives
         printf "\nEnter a partition to format ('/dev/sda1' for example) and type 'done' when there is nothing else to do:\n> "
         read -r part
         case $part in
@@ -86,7 +86,7 @@ mount_filesystems() {
     umount -R /mnt &> /dev/null|| true # prevent umount failure to exit this script
 
     while true; do
-        show_disks
+        show_drives
         printf "\nEnter the partition to use as root volume ('/dev/sda1' for example):\n> "
         read -r part
         if mount "$part" /mnt; then
@@ -98,7 +98,7 @@ mount_filesystems() {
     next
 
     while true; do
-        show_disks
+        show_drives
         printf "\nEnter a mountpoint ('/home' for example) or type 'done' if there is nothing else to do:\n> "
         read -r mountpoint
         case $mountpoint in
@@ -160,19 +160,18 @@ install_base() {
 
 install_grub() {
     while true; do
-        show_disks
-        printf "\nEnter the disk where grub will be installed ('/dev/sda' for example):\n> "
-        read -r disk
-        if grub-install --target=i386-pc "$disk"; then
+        show_drives
+        printf "\nEnter the drive where grub will be installed ('/dev/sda' for example):\n> "
+        read -r drive
+        if arch-chroot /mnt grub-install --target=i386-pc "$drive"; then
             sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
             printf "\Edit grub config? [y/N]:\n> "
             read -r sel
             case $sel in
                 y|Y ) nano /mnt/etc/default/grub;;
             esac
-            grub-mkconfig -o /mnt/boot/grub/grub.cfg
-        else
-            printf "Invalid input.\n\n"
+            arch-chroot /mnt grub-mkconfig -o /mnt/boot/grub/grub.cfg
+            break;
         fi
     done
 }
@@ -326,7 +325,7 @@ select_keyboard_layout
 next
 update_system_clock
 next
-partition_disks
+partition_drives
 next
 format_partitions
 next
@@ -338,6 +337,7 @@ setup_swapfile
 
 next
 install_base
+next
 install_grub
 set_shell_timezone_clock_locales
 next
