@@ -346,10 +346,13 @@ install_preset() {
     # install youtube-dl with python-pip
 
     # AUR
+    arch-chroot /mnt /bin/bash << EOF
     printf "Enabling access to the AUR"
     git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si && cd .. && rm -rf yay
+
     printf "Installing the AUR packages"
     yay -S --noconfirm chrome-gnome-shell megasync-bin nautilus-megasync rhythmbox-plugin-alternative-toolbar ttf-ms-fonts visual-studio-code-bin nautilus-admin-git corectrl
+EOF
 }
 
 epilogue() {
