@@ -240,7 +240,7 @@ ask_root_passwd() {
 create_user() {
     while true; do
         printf "\nEnter the new username:\n> "
-        read -rs user
+        read -r user
         case $user in
             "" ) printf "Invalid input.\n\n";;
             * ) arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"; break;;
@@ -259,7 +259,7 @@ create_user() {
     
         printf "\nEnter the user password for '%s' again:\n> " "$user"
         read -rs userpasswd2
-        if [ "$userpasswd" -eq "$userpasswd2" ]; then
+        if [ "$userpasswd" = "$userpasswd2" ]; then
             break
         else
             printf "The passwords dont match! Try again\n"
