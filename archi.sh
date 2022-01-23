@@ -109,6 +109,8 @@ mount_filesystems() {
                 read -r part
                 if ! mount "$part" /mnt"$mountpoint"; then
                     printf "Invalid input.\n\n"
+                else
+                    printf "\n"
                 fi;;
             * ) printf "Invalid input.\n\n";;
         esac
@@ -145,7 +147,7 @@ install_base() {
     printf "Enabling base services\n"
     systemctl enable NetworkManager --root=/mnt
     systemctl enable fstrim.timer --root=/mnt
-    printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /etc/xdg/reflector/reflector.conf
+    printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
     systemctl enable reflector.timer --root=/mnt
 
     printf "Generating fstab\n"
@@ -153,7 +155,7 @@ install_base() {
     printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /mnt/etc/fstab
 
     printf "Updating pacman config\n"
-    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
+    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
 }
 
 install_grub() {
@@ -162,22 +164,22 @@ install_grub() {
         printf "\nEnter the disk where grub will be installed ('/dev/sda' for example):\n> "
         read -r disk
         if grub-install --target=i386-pc "$disk"; then
-            sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/pacman.conf
+            sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
             printf "\Edit grub config? [y/N]:\n> "
             read -r sel
             case $sel in
-                y|Y ) nano /etc/default/grub;;
+                y|Y ) nano /mnt/etc/default/grub;;
             esac
-            grub-mkconfig -o /boot/grub/grub.cfg
+            grub-mkconfig -o /mnt/boot/grub/grub.cfg
         else
             printf "Invalid input.\n\n"
         fi
     done
 }
 
-enter_chroot_and_gen_locales() {
+set_shell_timezone_clock_locales() {
     printf "Chroot into newly installed system\n"
-    arch-chroot /mnt
+    arch-chroot /mnt /bin/bash << EOF
 
     printf "Setting zsh as the root shell\n"
     chsh -s /bin/zsh &> /dev/null
@@ -189,12 +191,13 @@ enter_chroot_and_gen_locales() {
     hwclock --systohc
 
     printf "Generating the locales\n"
-    printf "fr_FR.UTF-8 UTF-8\n" > /mnt/etc/locale.gen
+    printf "fr_FR.UTF-8 UTF-8\n" > /etc/locale.gen
     locale-gen &> /dev/null
-    printf "LANG=fr_FR.UTF-8" > /mnt/etc/locale.conf
+    printf "LANG=fr_FR.UTF-8" > /etc/locale.conf
 
     printf "Setting up the console keyboard layout\n"
-    printf "KEYMAP=%s\n" "$kbd" > /mnt/etc/vconsole.conf
+    printf "KEYMAP=%s\n" "$kbd" > /etc/vconsole.conf
+EOF
 }
 
 ask_hostname() {
@@ -204,8 +207,8 @@ ask_hostname() {
         case $hostname in
             "" ) printf "Invalid input.\n\n";;
             * )
-                printf "%s" "$hostname" > /etc/hostname
-                printf "127.0.0.1\tlocalhost\n::1\t\tlocalhost\n127.0.1.1\t%s.localdomain\t%s" "$hostname" "$hostname" >> /etc/hosts
+                printf "%s" "$hostname" > /mnt/etc/hostname
+                printf "127.0.0.1\tlocalhost\n::1\t\tlocalhost\n127.0.1.1\t%s.localdomain\t%s" "$hostname" "$hostname" >> /mnt/etc/hosts
                 break;;
         esac
     done
@@ -231,7 +234,7 @@ ask_root_passwd() {
         fi
     done
 
-    printf "root:%s" "$rootpasswd" | chpasswd
+    printf "root:%s" "$rootpasswd" | arch-chroot /mnt chpasswd
 }
 
 create_user() {
@@ -240,11 +243,7 @@ create_user() {
         read -rs user
         case $user in
             "" ) printf "Invalid input.\n\n";;
-            * )
-                if useradd -m -G wheel "$user"; then
-                    break
-                fi
-                printf "Invalid input.\n\n";;
+            * ) arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"; break;;
         esac
     done
 
@@ -267,8 +266,8 @@ create_user() {
         fi
     done
 
-    printf "%s:%s" "$user" "$userpasswd" | chpasswd
-    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
+    printf "%s:%s" "$user" "$userpasswd" | arch-chroot /mnt chpasswd
+    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
 }
 
 install_preset() {
@@ -338,7 +337,7 @@ setup_swapfile
 
 next
 install_base
-enter_chroot_and_gen_locales
+set_shell_timezone_clock_locales
 next
 ask_hostname
 ask_root_passwd
