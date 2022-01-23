@@ -146,29 +146,29 @@ detect_virt() {
     hypervisor=$(systemd-detect-virt --vm)
     case $hypervisor in
         kvm )
-            print "KVM has been detected"
-            print "Installing guest tools"
+            printf "KVM has been detected\n"
+            printf "Installing guest tools\n"
             pacstrap /mnt qemu-guest-agent
-            print "Enabling specific services for the guest tools"
+            printf "Enabling specific services for the guest tools\n"
             systemctl enable qemu-guest-agent --root=/mnt;;
         vmware )
-            print "VMWare Workstation/ESXi has been detected"
-            print "Installing guest tools"
+            printf "VMWare Workstation/ESXi has been detected\n"
+            printf "Installing guest tools\n"
             pacstrap /mnt open-vm-tools
-            print "Enabling specific services for the guest tools"
+            printf "Enabling specific services for the guest tools\n"
             systemctl enable vmtoolsd --root=/mnt
             systemctl enable vmware-vmblock-fuse --root=/mnt;;
         oracle )
-            print "VirtualBox has been detected"
-            print "Installing guest tools"
+            printf "VirtualBox has been detected\n"
+            printf "Installing guest tools\n"
             pacstrap /mnt virtualbox-guest-utils
-            print "Enabling specific services for the guest tools"
+            printf "Enabling specific services for the guest tools\n"
             systemctl enable vboxservice --root=/mnt;;
         microsoft )
-            print "Hyper-V has been detected"
-            print "Installing guest tools"
+            printf "Hyper-V has been detected\n"
+            printf "Installing guest tools\n"
             pacstrap /mnt hyperv
-            print "Enabling specific services for the guest tools"
+            printf "Enabling specific services for the guest tools\n"
             systemctl enable hv_fcopy_daemon --root=/mnt
             systemctl enable hv_kvp_daemon --root=/mnt
             systemctl enable hv_vss_daemon --root=/mnt;;
