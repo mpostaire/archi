@@ -329,7 +329,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    arch-chroot /mnt pacman -Syu --needed --noconfirm "$vdriver" gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    arch-chroot /mnt pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
@@ -339,6 +339,7 @@ install_preset() {
     # restore gnome extensions here
     # restore here corectrl config
     # init here hplip
+    # install youtube-dl with python-pip
 
     # AUR
     printf "Enabling access to the AUR"
