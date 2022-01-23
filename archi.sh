@@ -6,6 +6,7 @@ set -eu
 shopt -s extglob
 
 # TODO add left right arrow support for inputs to move cursor
+# TODO put the maximum of the user inputs (like hostname, user, passwords, ...) at the beginning
 
 next() {
     clear
@@ -177,10 +178,10 @@ detect_virt() {
 }
 
 install_base() {
+    pacman -Sy --noconfirm archlinux-keyring
+
     detect_microcode
     detect_virt
-
-    pacman -Sy archlinux-keyring
 
     printf "Installing the base system\n"
     pacstrap /mnt base base-devel linux linux-firmware linux-headers $microcode networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
@@ -331,7 +332,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    arch-chroot /mnt pacman -Syu --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    pacstrap /mnt $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
