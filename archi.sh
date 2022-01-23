@@ -228,7 +228,7 @@ ask_root_passwd() {
         printf "\nEnter the root password again:\n> "
         read -rs rootpasswd2
         if [ "$rootpasswd" = "$rootpasswd2" ]; then
-            break
+            printf "\n"
         else
             printf "The passwords dont match! Try again\n"
         fi
@@ -342,7 +342,6 @@ next
 ask_hostname
 ask_root_passwd
 create_user
-enable_services
 next
 install_preset
 next
