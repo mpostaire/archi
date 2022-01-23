@@ -227,7 +227,7 @@ ask_root_passwd() {
     
         printf "\nEnter the root password again:\n> "
         read -rs rootpasswd2
-        if [ "$rootpasswd" -eq "$rootpasswd2" ]; then
+        if [ "$rootpasswd" = "$rootpasswd2" ]; then
             break
         else
             printf "The passwords dont match! Try again\n"
