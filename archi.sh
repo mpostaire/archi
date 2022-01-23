@@ -140,12 +140,12 @@ install_base() {
     esac
 
     printf "Installing the base system\n"
-    pacstrap /mnt base base-devel linux linux-firmware linux-headers "$microcode" networkmanager grub reflector zsh nano wpa_supplicant os-prober dosfstools
+    pacstrap /mnt base base-devel linux linux-firmware linux-headers "$microcode" networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
 
     printf "Enabling base services\n"
     systemctl enable NetworkManager --root=/mnt
     systemctl enable fstrim.timer --root=/mnt
-    printf "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /etc/xdg/reflector/reflector.conf
+    printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /etc/xdg/reflector/reflector.conf
     systemctl enable reflector.timer --root=/mnt
 
     printf "Generating fstab\n"
@@ -291,7 +291,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    pacman -Syu --needed --noconfirm $vdriver gnome git cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex corectrl gnome-software-packagekit-plugin bat fzf chafa
+    pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex corectrl gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
