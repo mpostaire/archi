@@ -329,7 +329,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    arch-chroot /mnt pacman -Syu --needed --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    pacstrap /mnt $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
