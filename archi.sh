@@ -180,8 +180,10 @@ install_base() {
     detect_microcode
     detect_virt
 
+    pacman -Sy archlinux-keyring
+
     printf "Installing the base system\n"
-    pacstrap /mnt base base-devel linux linux-firmware linux-headers "$microcode" networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
+    pacstrap /mnt base base-devel linux linux-firmware linux-headers $microcode networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
 
     printf "Enabling base services\n"
     systemctl enable NetworkManager --root=/mnt
@@ -329,7 +331,7 @@ install_preset() {
     done
 
     printf "Installing the Gnome preset\n"
-    arch-chroot /mnt pacman -Syu --noconfirm $vdriver archlinux-keyring gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    arch-chroot /mnt pacman -Syu --noconfirm $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
