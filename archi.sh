@@ -248,7 +248,8 @@ ask_hostname() {
 detect_microcode() {
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* ) microcode="intel-ucode";;
-        * ) microcode="amd-ucode";;
+        *AuthenticAMD* ) microcode="amd-ucode";;
+        * ) printf "Error: unsupported CPU\n"; return 1;;
     esac
 }
 
@@ -353,6 +354,19 @@ set_hostname_user_and_passwords() {
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
 }
 
+install_yay() {
+    # exec command as user instead of root
+    # test changing aui_packages to /tmp
+    su - "$user" -c "
+    [[ ! -d aui_packages ]] && mkdir aui_packages
+    cd aui_packages
+    curl -o yay.tar.gz https://aur.archlinux.org/cgit/aur.git/snapshot/yay.tar.gz
+    tar zxvf yay.tar.gz
+    rm yay.tar.gz
+    cd yay
+    makepkg -csi --noconfirm"
+}
+
 install_preset() {
     printf "Install the Gnome preset? [Y/n]:\n> "
     read_input -e
@@ -388,8 +402,9 @@ install_preset() {
     # init here hplip
     # install youtube-dl with python-pip
 
-    # # AUR
-    # # TODO this fails because we can't use makepkg as root
+    # AUR
+    # install_yay
+
     # arch-chroot -u maxime /mnt /bin/bash << EOF
     # printf "Enabling access to the AUR\n"
     # pacman --noconfirm -S go
@@ -406,42 +421,28 @@ epilogue() {
     exit # exit the chroot
 }
 
-# TODO adapt these functions
-# install_yay() {
-#     # exec command as user instead of root
-#     # test changing aui_packages to /tmp
-#     su - "$user" -c "
-#     [[ ! -d aui_packages ]] && mkdir aui_packages
-#     cd aui_packages
-#     curl -o ${PKG}.tar.gz https://aur.archlinux.org/cgit/aur.git/snapshot/${PKG}.tar.gz
-#     tar zxvf ${PKG}.tar.gz
-#     rm ${PKG}.tar.gz
-#     cd ${PKG}
-#     makepkg -csi --noconfirm
-# "
-# }
-# aur_package_install() {
-# 	su - "$user" -c "sudo -v"
-# 	#install package from aur
-# 	for PKG in $1; do
-# 		if ! is_package_installed "${PKG}"; then
-# 			if [[ $AUTOMATIC_MODE -eq 1 ]]; then
-# 				ncecho " ${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} Installing ${AUR} ${Bold}${PKG}${Reset} "
-# 				su - "${username}" -c "${AUR_PKG_MANAGER} --noconfirm -S ${PKG}" >>"$LOG" 2>&1 &
-# 				pid=$!
-# 				progress $pid
-# 			else
-# 				su - "${username}" -c "${AUR_PKG_MANAGER} --noconfirm -S ${PKG}"
-# 			fi
-# 		else
-# 			if [[ $VERBOSE_MODE -eq 0 ]]; then
-# 				cecho " ${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} Installing ${AUR} ${Bold}${PKG}${Reset} success"
-# 			else
-# 				echo -e "Warning: ${PKG} is up to date --skipping"
-# 			fi
-# 		fi
-# 	done
-# }
+aur_package_install() {
+	su - "$user" -c "sudo -v"
+	#install package from aur
+	for PKG in $1; do
+		if ! is_package_installed "${PKG}"; then
+			if [[ $AUTOMATIC_MODE -eq 1 ]]; then
+				ncecho " ${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} Installing ${AUR} ${Bold}${PKG}${Reset} "
+				su - "${username}" -c "${AUR_PKG_MANAGER} --noconfirm -S ${PKG}" >>"$LOG" 2>&1 &
+				pid=$!
+				progress $pid
+			else
+				su - "${username}" -c "${AUR_PKG_MANAGER} --noconfirm -S ${PKG}"
+			fi
+		else
+			if [[ $VERBOSE_MODE -eq 0 ]]; then
+				cecho " ${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} Installing ${AUR} ${Bold}${PKG}${Reset} success"
+			else
+				echo -e "Warning: ${PKG} is up to date --skipping"
+			fi
+		fi
+	done
+}
 
 ##################################################
 
@@ -474,7 +475,6 @@ install_base
 next
 install_grub
 set_shell_timezone_clock_locales
-next
 set_hostname_user_and_passwords
 next
 install_preset
