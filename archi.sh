@@ -276,7 +276,7 @@ detect_virt() {
             systemctl enable hv_fcopy_daemon --root=/mnt
             systemctl enable hv_kvp_daemon --root=/mnt
             systemctl enable hv_vss_daemon --root=/mnt;;
-        * ) ;;
+        * ) printf "Unsupported hypervisor\n"; return 1;;
     esac
 }
 
@@ -291,7 +291,13 @@ install_base() {
 
     printf "Installing the base system\n"
     sed -i 's/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
-    pacstrap /mnt base base-devel linux linux-firmware linux-headers $microcode networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
+    while ! pacstrap /mnt base base-devel linux linux-firmware linux-headers $microcode networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools; do
+        printf "\nRetry? [Y/n]\n"
+        read_input -e
+        case $ret in
+            n|N ) return 1;;
+        esac
+    done
 
     printf "Enabling base services\n"
     systemctl enable NetworkManager --root=/mnt
@@ -307,6 +313,7 @@ install_base() {
     sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
 }
 
+# TODO put default grub config in this script to allow for edit prompt at the beginning
 install_grub() {
     printf "Installing GRUB\n"
     arch-chroot /mnt grub-install --target=i386-pc "$grub_drive"
@@ -388,7 +395,13 @@ install_preset() {
 
     printf "Installing the Gnome preset\n"
     # shellcheck disable=SC2086 # because 'vdriver' can be empty and we don't want pacstrap to fail
-    pacstrap /mnt $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa
+    while ! pacstrap /mnt $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa; do
+        printf "\nRetry? [Y/n]\n"
+        read_input -e
+        case $ret in
+            n|N ) return 1;;
+        esac
+    done
 
     printf "Enabling services for the Gnome preset\n"
     systemctl enable cups.socket --root=/mnt
