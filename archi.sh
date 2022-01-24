@@ -5,7 +5,7 @@
 set -eu
 shopt -s extglob
 
-# TODO add left right arrow support for inputs to move cursor
+# TODO add left right arrow support for inputs to move cursor (up/down for history?)
 # TODO put the maximum of the user inputs (like hostname, user, passwords, ...) at the beginning
 
 next() {
@@ -281,13 +281,16 @@ detect_virt() {
 }
 
 install_base() {
+    printf "Ranking mirrors\n"
+    reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
+
     pacman -Sy --noconfirm archlinux-keyring
 
     detect_microcode
     detect_virt
 
     printf "Installing the base system\n"
-    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
+    sed -i 's/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
     pacstrap /mnt base base-devel linux linux-firmware linux-headers $microcode networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools
 
     printf "Enabling base services\n"
@@ -305,9 +308,10 @@ install_base() {
 }
 
 install_grub() {
+    printf "Installing GRUB\n"
     arch-chroot /mnt grub-install --target=i386-pc "$grub_drive"
     sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-    printf "\nEdit grub config? [y/N]:\n> "
+    printf "\nEdit GRUB config? [y/N]:\n> "
     read_input -e
     case $ret in
         y|Y ) nano /mnt/etc/default/grub;;
