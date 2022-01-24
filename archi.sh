@@ -173,7 +173,7 @@ mount_filesystems() {
 }
 
 ask_grub() {
-    choose "Select the drive where GRUB will be installed" "$(lsblk -dpn -o NAME)"
+    choose "Select the drive where GRUB will be installed" "$(lsblk -dpnI 8,255 -o NAME)"
     grub_drive="$ret"
 }
 
@@ -213,16 +213,9 @@ ask_root_password() {
 }
 
 ask_username_and_password() {
-    while true; do
-        printf "\nEnter the new username:\n> "
-        read_input
-        user=$ret
-        if arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"; then
-            break
-        else
-            printf "Invalid input\n\n"
-        fi
-    done
+    printf "\nEnter the new username:\n> "
+    read_input
+    user=$ret
 
     while true; do
         printf "\nEnter the password for '%s':\n> " "$user"
@@ -350,6 +343,7 @@ set_hostname_user_and_passwords() {
     
     printf "root:%s" "$rootpasswd" | arch-chroot /mnt chpasswd
 
+    arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"
     printf "%s:%s" "$user" "$userpasswd" | arch-chroot /mnt chpasswd
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
 }
