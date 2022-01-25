@@ -268,7 +268,7 @@ format_partitions() {
 }
 
 mount_filesystems() {
-    umount -R /mnt &> /dev/null|| true # prevent umount failure to exit this script
+    umount -a &> /dev/null || true # prevent umount failure to exit this script
 
     while true; do
         show_drives
@@ -428,7 +428,7 @@ install_system() {
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
     printf "Installing 'archlinux-keyring' and 'devtools' on the live session\n"
-    pacman -Syu --noconfirm archlinux-keyring devtools
+    pacman -S --noconfirm archlinux-keyring devtools
 
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* )
@@ -465,7 +465,7 @@ install_system() {
     cd
     rm -rf /mnt/home/"$user"/yay
     printf "Installing AUR packages\n"
-    arch-chroot /mnt yay -Syu --noconfirm "${aur_pkgs[*]}"
+    arch-chroot /mnt yay -S --noconfirm "${aur_pkgs[*]}"
 
     # enable back packagekit hook if it exists
     mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
