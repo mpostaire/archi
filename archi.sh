@@ -428,7 +428,7 @@ install_system() {
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
     printf "Installing 'archlinux-keyring' and 'devtools' on the live session\n"
-    pacman -S --noconfirm archlinux-keyring devtools
+    pacman -Sy --noconfirm archlinux-keyring devtools
 
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* )
@@ -459,13 +459,13 @@ install_system() {
     mv -f /usr/share/libalpm/hooks/*packagekit-refresh.hook /tmp &> /dev/null || true
 
     printf "Enabling access to the AUR\n"
-    git clone -C /mnt/home/"$user" https://aur.archlinux.org/yay.git
+    git -C /mnt/home/"$user" clone https://aur.archlinux.org/yay.git
     cd /mnt/home/"$user"/yay
     extra-x86_64-build -c
     cd
     rm -rf /mnt/home/"$user"/yay
     printf "Installing AUR packages\n"
-    arch-chroot /mnt yay -S --noconfirm "${aur_pkgs[*]}"
+    arch-chroot /mnt yay -Sy --noconfirm "${aur_pkgs[*]}"
 
     # enable back packagekit hook if it exists
     mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
@@ -511,6 +511,8 @@ epilogue() {
 ##################################################
 
 # PREINSTALL
+
+umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
 
 detect_efi
 detect_virt
