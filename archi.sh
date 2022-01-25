@@ -381,7 +381,8 @@ ask_username_and_password() {
 }
 
 ask_preset() {
-    choose "\nSelect a preset to add on top of the basic installation" "$(printf "%s\n" "${presets[@]}")\nnone"
+    printf "\n"
+    choose "Select a preset to add on top of the basic installation" "$(printf "%s\n" "${presets[@]}")\nnone"
     preset=$ret
 }
 
@@ -426,8 +427,8 @@ install_system() {
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
-    printf "Updating archlinux-keyring\n"
-    pacman -Sy --noconfirm archlinux-keyring
+    printf "Installing 'archlinux-keyring' and 'devtools' on the live session\n"
+    pacman -Syu --noconfirm archlinux-keyring devtools
 
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* )
@@ -457,14 +458,14 @@ install_system() {
     # temporarily disable packagekit hook if it exists (prevents failure on package installation while chrooted)
     mv -f /usr/share/libalpm/hooks/*packagekit-refresh.hook /tmp &> /dev/null || true
 
-    cmd="printf 'Enabling access to the AUR\n'
-    cd /tmp
-    git clone https://aur.archlinux.org/yay.git
-    cd yay
-    makepkg -csi --noconfirm
-    printf 'Installing AUR packages\n'
-    yay -Sy --noconfirm ${aur_pkgs[*]}"
-    arch-chroot /mnt su - "$user" -c "$cmd"
+    printf "Enabling access to the AUR\n"
+    git clone -C /mnt/home/"$user" https://aur.archlinux.org/yay.git
+    cd /mnt/home/"$user"/yay
+    extra-x86_64-build -c
+    cd
+    rm -rf /mnt/home/"$user"/yay
+    printf "Installing AUR packages\n"
+    arch-chroot /mnt yay -Syu --noconfirm "${aur_pkgs[*]}"
 
     # enable back packagekit hook if it exists
     mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
