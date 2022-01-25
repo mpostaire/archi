@@ -457,15 +457,14 @@ install_system() {
     # temporarily disable packagekit hook if it exists (prevents failure on package installation while chrooted)
     mv -f /usr/share/libalpm/hooks/*packagekit-refresh.hook /tmp &> /dev/null || true
 
-    arch-chroot -u "$user" /mnt /bin/bash << EOF
-    printf "Enabling access to the AUR\n"
+    cmd="printf 'Enabling access to the AUR\n'
     cd /tmp
     git clone https://aur.archlinux.org/yay.git
     cd yay
     makepkg -csi --noconfirm
-    printf "Installing AUR packages\n"
-    yay -Sy --noconfirm "${aur_pkgs[@]}"
-EOF
+    printf 'Installing AUR packages\n'
+    yay -Sy --noconfirm ${aur_pkgs[*]}"
+    arch-chroot /mnt /bin/bash su - "$user" -c "$cmd"
 
     # enable back packagekit hook if it exists
     mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
