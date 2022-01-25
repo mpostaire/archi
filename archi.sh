@@ -5,9 +5,6 @@
 set -eu
 shopt -s extglob
 
-# TODO add left right arrow support for inputs to move cursor (up/down for history?)
-# TODO put the maximum of the user inputs (like hostname, user, passwords, ...) at the beginning
-
 next() {
     clear
     printf "
@@ -22,8 +19,74 @@ next() {
 "
 }
 
+pkgs=(
+    base
+    base-devel
+    linux
+    linux-firmware
+    linux-headers
+    networkmanager
+    grub
+    reflector
+    zsh
+    nano
+    git
+    wpa_supplicant
+    os-prober
+    dosfstools
+)
+
+aur_pkgs=()
+
+services=(
+    NetworkManager
+    fstrim.timer
+    reflector.timer
+)
+
+gnome_preset_pkgs=(
+    gnome
+    cups
+    unrar
+    vim
+    firefox
+    transmission-gtk
+    rhythmbox
+    thunderbird
+    steam
+    mpv
+    libreoffice
+    keepassxc
+    gparted
+    ttf-dejavu
+    noto-fonts-cjk
+    neofetch
+    ghex
+    gnome-software-packagekit-plugin
+    bat
+    fzf
+    chafa
+    youtube-dl
+)
+
+gnome_preset_aur_pkgs=(
+    chrome-gnome-shell
+    megasync-bin
+    nautilus-megasync
+    rhythmbox-plugin-alternative-toolbar
+    ttf-ms-fonts
+    visual-studio-code-bin
+    nautilus-admin-git
+)
+
+gnome_preset_services=(
+    cups.socket
+    gdm.service
+)
+
 # arguments: '-s': don't show input (useful for passwords); '-e': allow empty input.
 # returns result in 'ret' variable
+# TODO add left right arrow support for inputs to move cursor (up/down for history?)
 read_input() {
     _secret=0
     _allow_empty=0
@@ -92,6 +155,28 @@ detect_efi() {
         printf "This install script only supports BIOS mode for now.\n"
         exit 1
     fi
+}
+
+detect_virt() {
+    hypervisor=$(systemd-detect-virt --vm)
+    case $hypervisor in
+        kvm )
+            printf "KVM detected\n"
+            pkgs+=(qemu-guest-agent)
+            services+=(qemu-guest-agent);;
+        vmware )
+            printf "VMWare Workstation/ESXi detected\n"
+            pkgs+=(open-vm-tools)
+            services+=(vmtoolsd vmware-vmblock-fuse);;
+        oracle )
+            printf "VirtualBox detected\n"
+            pkgs+=(virtualbox-guest-utils)
+            services+=(vboxservice);;
+        microsoft )
+            printf "Hyper-V detected\n"
+            pkgs+=(hyperv)
+            services+=(hv_fcopy_daemon hv_kvp_daemon hv_vss_daemon);;
+    esac
 }
 
 ask_keyboard_layout() {
@@ -175,6 +260,17 @@ mount_filesystems() {
 ask_grub() {
     choose "Select the drive where GRUB will be installed" "$(lsblk -dpnI 8,255 -o NAME)"
     grub_drive="$ret"
+
+    if [ -f /etc/default/grub ]; then
+        /bin/cp /etc/default/grub /tmp/grub
+        sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /tmp/grub
+        sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /tmp/grub
+        printf "\nEdit GRUB config? [y/N]:\n> "
+        read_input -e
+        case $ret in
+            y|Y ) nano /tmp/grub;;
+        esac
+    fi
 }
 
 setup_swapfile() {
@@ -187,12 +283,18 @@ setup_swapfile() {
                 if dd if=/dev/zero of=/mnt/swapfile bs=1M count="$ret" status=progress; then
                     chmod 600 /mnt/swapfile
                     mkswap /mnt/swapfile
-                    # swapon??
+                    # TODO swapon??
                     break
                 fi;;
             * ) printf "Invalid input\n\n";;
         esac
     done
+}
+
+ask_hostname() {
+    printf "\nEnter the hostname ('arch-laptop' for example):\n> "
+    read_input
+    hostname=$ret
 }
 
 ask_root_password() {
@@ -232,66 +334,69 @@ ask_username_and_password() {
     done
 }
 
-ask_hostname() {
-    printf "\nEnter the hostname ('arch-laptop' for example):\n> "
-    read_input
-    hostname=$ret
-}
-
-detect_microcode() {
-    case $(grep vendor_id /proc/cpuinfo) in
-        *GenuineIntel* ) microcode="intel-ucode";;
-        *AuthenticAMD* ) microcode="amd-ucode";;
-        * ) printf "Error: unsupported CPU\n"; return 1;;
+ask_preset() {
+    printf "Install the Gnome preset? [Y/n]:\n> "
+    read_input -e
+    case $ret in
+        y|Y ) pkgs+=("${gnome_preset_pkgs[@]}");;
+        n|N ) return;;
     esac
-}
 
-detect_virt() {
-    hypervisor=$(systemd-detect-virt --vm)
-    case $hypervisor in
-        kvm )
-            printf "KVM has been detected\n"
-            printf "Installing guest tools\n"
-            pacstrap /mnt qemu-guest-agent
-            printf "Enabling specific services for the guest tools\n"
-            systemctl enable qemu-guest-agent --root=/mnt;;
-        vmware )
-            printf "VMWare Workstation/ESXi has been detected\n"
-            printf "Installing guest tools\n"
-            pacstrap /mnt open-vm-tools
-            printf "Enabling specific services for the guest tools\n"
-            systemctl enable vmtoolsd --root=/mnt
-            systemctl enable vmware-vmblock-fuse --root=/mnt;;
-        oracle )
-            printf "VirtualBox has been detected\n"
-            printf "Installing guest tools\n"
-            pacstrap /mnt virtualbox-guest-utils
-            printf "Enabling specific services for the guest tools\n"
-            systemctl enable vboxservice --root=/mnt;;
-        microsoft )
-            printf "Hyper-V has been detected\n"
-            printf "Installing guest tools\n"
-            pacstrap /mnt hyperv
-            printf "Enabling specific services for the guest tools\n"
-            systemctl enable hv_fcopy_daemon --root=/mnt
-            systemctl enable hv_kvp_daemon --root=/mnt
-            systemctl enable hv_vss_daemon --root=/mnt;;
-        * ) printf "Unsupported hypervisor\n"; return 1;;
+    if [ "$hypervisor" = "none" ]; then
+        choose "Select the video driver to install" "xf86-video-amdgpu\nxf86-video-ati\nxf86-video-intel\nnvidia"
+        case $ret in
+            xf86-video-amdgpu )
+                pkgs+=(xf86-video-amdgpu vulkan-radeon)
+                printf "Install 'corectrl' (AMD GPU OC utility)? [Y/n]:\n> "
+                read_input -e
+                case $ret in
+                    n|N ) ;;
+                    * ) aur_pkgs+=(corectrl);;
+                esac;;
+            xf86-video-ati ) pkgs+=(xf86-video-ati);;
+            xf86-video-intel ) pkgs+=(xf86-video-intel);;
+            nvidia ) pkgs+=(nvidia);;
+        esac
+    fi
+
+    printf "Install 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
+    read_input -e
+    case $ret in
+        y|Y ) pkgs+=(hplip);;
+        n|N ) return;;
     esac
+
+    services+=("${gnome_preset_services[@]}")
+
+    aur_pkgs+=("${gnome_preset_aur_pkgs[@]}")
+
+    # TODO
+    # restore dotfiles here
+    # restore here gnome config (put in dotfiles?)
+    # restore gnome extensions here (put in dotfiles?)
+    # if corectrl command exists, restore here corectrl config (put in dotfiles?) + do this: https://gitlab.com/corectrl/corectrl/-/wikis/Setup
+    # run 'hp-setup -i' here if hplip was selected for installation (if hp-setup command exists)
 }
 
-install_base() {
+install_system() {
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
+    printf "Updating archlinux-keyring\n"
     pacman -Sy --noconfirm archlinux-keyring
 
-    detect_microcode
-    detect_virt
+    case $(grep vendor_id /proc/cpuinfo) in
+        *GenuineIntel* )
+            printf "Intel CPU detected\n"
+            pkgs+=(intel-ucode);;
+        *AuthenticAMD* )
+            printf "AMD CPU detected\n"
+            pkgs+=(amd-ucode);;
+    esac
 
-    printf "Installing the base system\n"
+    printf "Installing packages\n"
     sed -i 's/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
-    while ! pacstrap /mnt base base-devel linux linux-firmware linux-headers $microcode networkmanager grub reflector zsh nano git wpa_supplicant os-prober dosfstools; do
+    while ! pacstrap /mnt "${pkgs[@]}"; do
         printf "\nRetry? [Y/n]\n"
         read_input -e
         case $ret in
@@ -299,30 +404,47 @@ install_base() {
         esac
     done
 
-    printf "Enabling base services\n"
-    systemctl enable NetworkManager --root=/mnt
-    systemctl enable fstrim.timer --root=/mnt
+    printf "Updating pacman config\n"
+    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
+
+    arch-chroot -u "$user" /mnt /bin/bash << EOF
+    printf "Enabling access to the AUR\n"
+    cd /tmp
+    git clone https://aur.archlinux.org/yay.git
+    cd yay
+    makepkg -csi --noconfirm
+    printf "Installing AUR packages\n"
+    yay -Sy --noconfirm "${aur_pkgs[@]}"
+EOF
+
     printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
-    systemctl enable reflector.timer --root=/mnt
+    printf "Enabling services\n"
+    for elem in "${services[@]}"; do
+        systemctl enable "$elem" --root=/mnt
+    done
 
     printf "Generating fstab\n"
     genfstab -U /mnt >> /mnt/etc/fstab
     printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /mnt/etc/fstab
-
-    printf "Updating pacman config\n"
-    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
 }
 
-# TODO put default grub config in this script to allow for edit prompt at the beginning
 install_grub() {
     printf "Installing GRUB\n"
+
+    # If we didn't find the gub default config earlier, ask to edit here.
+    if [ ! -f /tmp/grub ]; then
+        sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /mnt/etc/default/grub
+        sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub
+        printf "\nEdit GRUB config? [y/N]:\n> "
+        read_input -e
+        case $ret in
+            y|Y ) nano /mnt/etc/default/grub;;
+        esac
+    else
+        /bin/cp /tmp/grub /mnt/etc/default/grub
+    fi
+
     arch-chroot /mnt grub-install --target=i386-pc "$grub_drive"
-    sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-    printf "\nEdit GRUB config? [y/N]:\n> "
-    read_input -e
-    case $ret in
-        y|Y ) nano /mnt/etc/default/grub;;
-    esac
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 }
 
@@ -359,100 +481,8 @@ set_hostname_user_and_passwords() {
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
 }
 
-install_yay() {
-    # exec command as user instead of root
-    # test changing aui_packages to /tmp
-    su - "$user" -c "
-    [[ ! -d aui_packages ]] && mkdir aui_packages
-    cd aui_packages
-    curl -o yay.tar.gz https://aur.archlinux.org/cgit/aur.git/snapshot/yay.tar.gz
-    tar zxvf yay.tar.gz
-    rm yay.tar.gz
-    cd yay
-    makepkg -csi --noconfirm"
-}
-
-install_preset() {
-    printf "Install the Gnome preset? [Y/n]:\n> "
-    read_input -e
-    case $ret in
-        n|N ) return;;
-    esac
-
-    vdriver=""
-    while [ "$hypervisor" = "none" ]; do
-        printf "\nSelect the video driver to install:\n\t1) xf86-video-amdgpu (NEW)\n\t2) xf86-video-ati (OLD)\n\t3) xf86-video-intel\n\t4) nvidia\n\n> "
-        read_input
-        vdriver=$ret
-        case $vdriver in
-            1|xf86-video-amdgpu ) vdriver="xf86-video-amdgpu vulkan-radeon"; break;;
-            2|xf86-video-ati ) vdriver=xf86-video-ati; break;;
-            3|xf86-video-intel ) vdriver=xf86-video-intel; break;;
-            4|nvidia ) vdriver=nvidia; break;;
-            * ) vdriver=""; printf "Invalid input.\n\n";;
-        esac
-    done
-
-    printf "Installing the Gnome preset\n"
-    # shellcheck disable=SC2086 # because 'vdriver' can be empty and we don't want pacstrap to fail
-    while ! pacstrap /mnt $vdriver gnome cups unrar vim firefox transmission-gtk rhythmbox thunderbird steam mpv libreoffice hplip keepassxc gparted ttf-dejavu noto-fonts-cjk neofetch ghex gnome-software-packagekit-plugin bat fzf chafa; do
-        printf "\nRetry? [Y/n]\n"
-        read_input -e
-        case $ret in
-            n|N ) return 1;;
-        esac
-    done
-
-    printf "Enabling services for the Gnome preset\n"
-    systemctl enable cups.socket --root=/mnt
-    systemctl enable gdm.service --root=/mnt
-
-    # restore here gnome config
-    # restore gnome extensions here
-    # restore here corectrl config
-    # init here hplip
-    # install youtube-dl with python-pip
-
-    # AUR
-    # install_yay
-
-    # arch-chroot -u maxime /mnt /bin/bash << EOF
-    # printf "Enabling access to the AUR\n"
-    # pacman --noconfirm -S go
-    # pacman -D --asdeps go
-    # git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si && cd .. && rm -rf yay
-
-    # printf "Installing the AUR packages"
-    # yay -S --noconfirm chrome-gnome-shell megasync-bin nautilus-megasync rhythmbox-plugin-alternative-toolbar ttf-ms-fonts visual-studio-code-bin nautilus-admin-git corectrl
-# EOF
-}
-
 epilogue() {
-    printf "TODO end\n"
-    exit # exit the chroot
-}
-
-aur_package_install() {
-	su - "$user" -c "sudo -v"
-	#install package from aur
-	for PKG in $1; do
-		if ! is_package_installed "${PKG}"; then
-			if [[ $AUTOMATIC_MODE -eq 1 ]]; then
-				ncecho " ${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} Installing ${AUR} ${Bold}${PKG}${Reset} "
-				su - "${username}" -c "${AUR_PKG_MANAGER} --noconfirm -S ${PKG}" >>"$LOG" 2>&1 &
-				pid=$!
-				progress $pid
-			else
-				su - "${username}" -c "${AUR_PKG_MANAGER} --noconfirm -S ${PKG}"
-			fi
-		else
-			if [[ $VERBOSE_MODE -eq 0 ]]; then
-				cecho " ${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} Installing ${AUR} ${Bold}${PKG}${Reset} success"
-			else
-				echo -e "Warning: ${PKG} is up to date --skipping"
-			fi
-		fi
-	done
+    printf "Installation completed, you can reboot now\n"
 }
 
 ##################################################
@@ -460,6 +490,7 @@ aur_package_install() {
 # PREINSTALL
 
 detect_efi
+detect_virt
 next
 ask_keyboard_layout
 next
@@ -478,16 +509,15 @@ next
 ask_hostname
 ask_root_password
 ask_username_and_password
+ask_preset
 
 # INSTALL
 
 next
-install_base
+install_system
 next
 install_grub
 set_shell_timezone_clock_locales
 set_hostname_user_and_passwords
-next
-install_preset
 next
 epilogue
