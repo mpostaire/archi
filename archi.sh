@@ -385,9 +385,43 @@ ask_preset() {
     preset=$ret
 }
 
+set_hostname_user_and_passwords() {
+    printf "%s" "$hostname" > /mnt/etc/hostname
+    printf "127.0.0.1\tlocalhost\n::1\t\tlocalhost\n127.0.1.1\t%s.localdomain\t%s" "$hostname" "$hostname" >> /mnt/etc/hosts
+    
+    printf "root:%s" "$rootpasswd" | arch-chroot /mnt chpasswd
+
+    arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"
+    printf "%s:%s" "$user" "$userpasswd" | arch-chroot /mnt chpasswd
+    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
+}
+
+set_shell_timezone_clock_locales() {
+    arch-chroot /mnt /bin/bash << EOF
+
+    printf "Setting zsh as the root shell\n"
+    chsh -s /bin/zsh &> /dev/null
+
+    printf "Setting up the timezone\n"
+    ln -sf "/usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone)" /etc/localtime &>/dev/null
+
+    printf "Setting up the clock\n"
+    hwclock --systohc
+
+    printf "Generating the locales\n"
+    printf "fr_FR.UTF-8 UTF-8\n" > /etc/locale.gen
+    locale-gen &> /dev/null
+    printf "LANG=fr_FR.UTF-8" > /etc/locale.conf
+
+    printf "Setting up the console keyboard layout\n"
+    printf "KEYMAP=%s\n" "$kbd" > /etc/vconsole.conf
+EOF
+}
+
 install_system() {
     # preset before install callback
     [[ $(type -t "${preset}"_before_install) == "function" ]] && "${preset}"_before_install
+    next
 
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
@@ -416,6 +450,9 @@ install_system() {
 
     printf "Updating pacman config\n"
     sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
+
+    set_hostname_user_and_passwords
+    set_shell_timezone_clock_locales
 
     # temporarily disable packagekit hook if it exists (prevents failure on package installation while chrooted)
     mv -f /usr/share/libalpm/hooks/*packagekit-refresh.hook /tmp &> /dev/null || true
@@ -467,39 +504,6 @@ install_grub() {
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 }
 
-set_shell_timezone_clock_locales() {
-    arch-chroot /mnt /bin/bash << EOF
-
-    printf "Setting zsh as the root shell\n"
-    chsh -s /bin/zsh &> /dev/null
-
-    printf "Setting up the timezone\n"
-    ln -sf "/usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone)" /etc/localtime &>/dev/null
-
-    printf "Setting up the clock\n"
-    hwclock --systohc
-
-    printf "Generating the locales\n"
-    printf "fr_FR.UTF-8 UTF-8\n" > /etc/locale.gen
-    locale-gen &> /dev/null
-    printf "LANG=fr_FR.UTF-8" > /etc/locale.conf
-
-    printf "Setting up the console keyboard layout\n"
-    printf "KEYMAP=%s\n" "$kbd" > /etc/vconsole.conf
-EOF
-}
-
-set_hostname_user_and_passwords() {
-    printf "%s" "$hostname" > /mnt/etc/hostname
-    printf "127.0.0.1\tlocalhost\n::1\t\tlocalhost\n127.0.1.1\t%s.localdomain\t%s" "$hostname" "$hostname" >> /mnt/etc/hosts
-    
-    printf "root:%s" "$rootpasswd" | arch-chroot /mnt chpasswd
-
-    arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"
-    printf "%s:%s" "$user" "$userpasswd" | arch-chroot /mnt chpasswd
-    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
-}
-
 epilogue() {
     printf "Installation completed, you can reboot now\n"
 }
@@ -536,7 +540,5 @@ next
 install_system
 next
 install_grub
-set_shell_timezone_clock_locales
-set_hostname_user_and_passwords
 next
 epilogue
