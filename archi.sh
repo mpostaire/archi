@@ -381,7 +381,7 @@ ask_username_and_password() {
 }
 
 ask_preset() {
-    choose "Select a preset to add on top of the basic installation" "$(printf "%s\n" "${presets[@]}")\nnone"
+    choose "\nSelect a preset to add on top of the basic installation" "$(printf "%s\n" "${presets[@]}")\nnone"
     preset=$ret
 }
 
@@ -464,7 +464,7 @@ install_system() {
     makepkg -csi --noconfirm
     printf 'Installing AUR packages\n'
     yay -Sy --noconfirm ${aur_pkgs[*]}"
-    arch-chroot /mnt /bin/bash su - "$user" -c "$cmd"
+    arch-chroot /mnt su - "$user" -c "$cmd"
 
     # enable back packagekit hook if it exists
     mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
