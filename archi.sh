@@ -268,7 +268,7 @@ format_partitions() {
 }
 
 mount_filesystems() {
-    umount -a &> /dev/null || true # prevent umount failure to exit this script
+    umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
 
     while true; do
         show_drives
