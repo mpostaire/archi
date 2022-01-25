@@ -5,19 +5,91 @@
 set -eu
 shopt -s extglob
 
-next() {
-    clear
-    printf "
-    _             _     _       _     
-   / \   _ __ ___| |__ (_)  ___| |__  
-  / _ \ | '__/ __| '_ \| | / __| '_ \ 
- / ___ \| | | (__| | | | |_\__ \ | | |
-/_/   \_\_|  \___|_| |_|_(_)___/_| |_|
+##################################################
 
---------------------------------------
+# PRESETS
 
-"
+presets=(
+    gnome
+)
+
+gnome_before_install() {
+    pkgs+=(
+        gnome
+        cups
+        unrar
+        vim
+        firefox
+        transmission-gtk
+        rhythmbox
+        thunderbird
+        steam
+        mpv
+        libreoffice
+        keepassxc
+        gparted
+        ttf-dejavu
+        noto-fonts-cjk
+        neofetch
+        ghex
+        gnome-software-packagekit-plugin
+        bat
+        fzf
+        chafa
+        youtube-dl
+        wget
+    )
+
+    aur_pkgs+=(
+        chrome-gnome-shell
+        megasync-bin
+        nautilus-megasync
+        rhythmbox-plugin-alternative-toolbar
+        ttf-ms-fonts
+        visual-studio-code-bin
+        nautilus-admin-git
+    )
+
+    services+=(
+        cups.socket
+        gdm.service
+    )
+
+    if [ "$hypervisor" = "none" ]; then
+        choose "Select the video driver to install" "xf86-video-amdgpu\nxf86-video-ati\nxf86-video-intel\nnvidia"
+        case $ret in
+            xf86-video-amdgpu )
+                pkgs+=(xf86-video-amdgpu vulkan-radeon)
+                printf "Install 'corectrl' (AMD GPU OC utility)? [Y/n]:\n> "
+                read_input -e
+                case $ret in
+                    n|N ) ;;
+                    * ) aur_pkgs+=(corectrl);;
+                esac;;
+            xf86-video-ati ) pkgs+=(xf86-video-ati);;
+            xf86-video-intel ) pkgs+=(xf86-video-intel);;
+            nvidia ) pkgs+=(nvidia);;
+        esac
+    fi
+
+    printf "Install 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
+    read_input -e
+    case $ret in
+        y|Y ) pkgs+=(hplip);;
+        n|N ) return;;
+    esac
 }
+
+# gnome_after_install() {
+#     # TODO
+#     # restore dotfiles here
+#     # restore here gnome config (put in dotfiles?)
+#     # restore gnome extensions here (put in dotfiles?)
+#     # if corectrl command exists, restore here corectrl config (put in dotfiles?) + do this: https://gitlab.com/corectrl/corectrl/-/wikis/Setup
+#     # run 'hp-setup -i' here if hplip was selected for installation (if hp-setup command exists)
+# }
+
+##################################################
 
 pkgs=(
     base
@@ -44,45 +116,19 @@ services=(
     reflector.timer
 )
 
-gnome_preset_pkgs=(
-    gnome
-    cups
-    unrar
-    vim
-    firefox
-    transmission-gtk
-    rhythmbox
-    thunderbird
-    steam
-    mpv
-    libreoffice
-    keepassxc
-    gparted
-    ttf-dejavu
-    noto-fonts-cjk
-    neofetch
-    ghex
-    gnome-software-packagekit-plugin
-    bat
-    fzf
-    chafa
-    youtube-dl
-)
+next() {
+    clear
+    printf "
+    _             _     _       _     
+   / \   _ __ ___| |__ (_)  ___| |__  
+  / _ \ | '__/ __| '_ \| | / __| '_ \ 
+ / ___ \| | | (__| | | | |_\__ \ | | |
+/_/   \_\_|  \___|_| |_|_(_)___/_| |_|
 
-gnome_preset_aur_pkgs=(
-    chrome-gnome-shell
-    megasync-bin
-    nautilus-megasync
-    rhythmbox-plugin-alternative-toolbar
-    ttf-ms-fonts
-    visual-studio-code-bin
-    nautilus-admin-git
-)
+--------------------------------------
 
-gnome_preset_services=(
-    cups.socket
-    gdm.service
-)
+"
+}
 
 # arguments: '-s': don't show input (useful for passwords); '-e': allow empty input.
 # returns result in 'ret' variable
@@ -335,50 +381,14 @@ ask_username_and_password() {
 }
 
 ask_preset() {
-    printf "Install the Gnome preset? [Y/n]:\n> "
-    read_input -e
-    case $ret in
-        y|Y ) pkgs+=("${gnome_preset_pkgs[@]}");;
-        n|N ) return;;
-    esac
-
-    if [ "$hypervisor" = "none" ]; then
-        choose "Select the video driver to install" "xf86-video-amdgpu\nxf86-video-ati\nxf86-video-intel\nnvidia"
-        case $ret in
-            xf86-video-amdgpu )
-                pkgs+=(xf86-video-amdgpu vulkan-radeon)
-                printf "Install 'corectrl' (AMD GPU OC utility)? [Y/n]:\n> "
-                read_input -e
-                case $ret in
-                    n|N ) ;;
-                    * ) aur_pkgs+=(corectrl);;
-                esac;;
-            xf86-video-ati ) pkgs+=(xf86-video-ati);;
-            xf86-video-intel ) pkgs+=(xf86-video-intel);;
-            nvidia ) pkgs+=(nvidia);;
-        esac
-    fi
-
-    printf "Install 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
-    read_input -e
-    case $ret in
-        y|Y ) pkgs+=(hplip);;
-        n|N ) return;;
-    esac
-
-    services+=("${gnome_preset_services[@]}")
-
-    aur_pkgs+=("${gnome_preset_aur_pkgs[@]}")
-
-    # TODO
-    # restore dotfiles here
-    # restore here gnome config (put in dotfiles?)
-    # restore gnome extensions here (put in dotfiles?)
-    # if corectrl command exists, restore here corectrl config (put in dotfiles?) + do this: https://gitlab.com/corectrl/corectrl/-/wikis/Setup
-    # run 'hp-setup -i' here if hplip was selected for installation (if hp-setup command exists)
+    choose "Select a preset to add on top of the basic installation" "$(printf "%s\n" "${presets[@]}")\nnone"
+    preset=$ret
 }
 
 install_system() {
+    # preset before install callback
+    [[ $(type -t "${preset}"_before_install) == "function" ]] && "${preset}"_before_install
+
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
@@ -407,6 +417,9 @@ install_system() {
     printf "Updating pacman config\n"
     sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
 
+    # temporarily disable packagekit hook if it exists (prevents failure on package installation while chrooted)
+    mv -f /usr/share/libalpm/hooks/*packagekit-refresh.hook /tmp &> /dev/null || true
+
     arch-chroot -u "$user" /mnt /bin/bash << EOF
     printf "Enabling access to the AUR\n"
     cd /tmp
@@ -417,6 +430,9 @@ install_system() {
     yay -Sy --noconfirm "${aur_pkgs[@]}"
 EOF
 
+    # enable back packagekit hook if it exists
+    mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
+
     printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
     printf "Enabling services\n"
     for elem in "${services[@]}"; do
@@ -426,6 +442,9 @@ EOF
     printf "Generating fstab\n"
     genfstab -U /mnt >> /mnt/etc/fstab
     printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /mnt/etc/fstab
+
+    # preset after install callback
+    [[ $(type -t "${preset}"_after_install) == "function" ]] && "${preset}"_after_install
 }
 
 install_grub() {
