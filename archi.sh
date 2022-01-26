@@ -299,10 +299,10 @@ ask_username_and_password() {
 }
 
 ask_preset() {
-    printf "Downloading presets\n"
-    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh > /mnt/home/"$user"/archi/archi_presets.sh
+    printf "\n\nDownloading presets\n"
+    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh > archi_presets.sh
     # shellcheck source=/dev/null
-    source /mnt/home/"$user"/archi/archi_presets.sh
+    source archi_presets.sh
     printf "\n"
 
     # filter out 'none' if it exists
@@ -417,6 +417,7 @@ prepare_first_reboot() {
     mkdir -p /mnt/home/"$user"/archi
     printf "%s" "$preset" > /mnt/home/"$user"/archi/preset
     script_path=/mnt/home/"$user"/archi/archi_finish_install.sh
+    cp archi_presets.sh /mnt/home/"$user"/archi/archi_presets.sh
 
     printf "Downloading finish install script"
     curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh > "$script_path"
