@@ -59,20 +59,18 @@ gnome_install() {
     makepkg -csi --noconfirm
     cd ..
 
-    # TODO detect gpu and appropriate driver automatically
-    if [ "$(systemd-detect-virt --vm)" = "none" ]; then
-        choose "Select the video driver to install" "xf86-video-amdgpu\nxf86-video-ati\nxf86-video-intel\nnvidia"
-        # shellcheck disable=SC2154 # this script is never called directly but sourced in a script containing the necessary functions
-        case $ret in
-            xf86-video-amdgpu )
-                pkgs+=("$ret" vulkan-radeon)
-                read_input_yn "\nInstall 'corectrl' (AMD GPU OC utility)?" "Y/n"
-                case $ret in
-                    y ) pkgs+=(corectrl);;
-                esac;;
-        esac
-        pkgs+=("$ret")
-    fi
+    detect_vdriver
+    # shellcheck disable=SC2154 # this script is never called directly but sourced in a script containing the necessary functions
+    case $ret in
+        xf86-video-amdgpu )
+            pkgs+=("$ret" vulkan-radeon)
+            read_input_yn "\nInstall 'corectrl' (AMD GPU OC utility)?" "Y/n"
+            case $ret in
+                y ) pkgs+=(corectrl);;
+            esac;;
+        none ) ;;
+        * ) pkgs+=("$ret");;
+    esac
 
     read_input_yn "\nInstall 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)?" "Y/n"
     case $ret in
