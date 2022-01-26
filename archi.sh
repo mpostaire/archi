@@ -2,94 +2,14 @@
 
 # Thanks to https://github.com/classy-giraffe/easy-arch and https://github.com/helmuthdu/aui/
 
+# TODO make this the base install script and make another script for the first startup script.
+# the first startup script will be placed (during the base install) on the newly installed system and
+# autorun during the first startup after user login of group $user. If a GUI session is detected, spawn a terminal asking
+# Y/n to continue post installation. if in console, just do it there.
+# after it's done, remove the script and whatever what was used to run it
+
 set -eu
 shopt -s extglob
-
-##################################################
-
-# PRESETS
-
-presets=(
-    gnome
-)
-
-gnome_before_install() {
-    pkgs+=(
-        gnome
-        cups
-        unrar
-        vim
-        firefox
-        transmission-gtk
-        rhythmbox
-        thunderbird
-        steam
-        mpv
-        libreoffice
-        keepassxc
-        gparted
-        ttf-dejavu
-        noto-fonts-cjk
-        neofetch
-        ghex
-        gnome-software-packagekit-plugin
-        bat
-        fzf
-        chafa
-        youtube-dl
-        wget
-    )
-
-    aur_pkgs+=(
-        chrome-gnome-shell
-        megasync-bin
-        nautilus-megasync
-        rhythmbox-plugin-alternative-toolbar
-        ttf-ms-fonts
-        visual-studio-code-bin
-        nautilus-admin-git
-    )
-
-    services+=(
-        cups.socket
-        gdm.service
-    )
-
-    if [ "$hypervisor" = "none" ]; then
-        choose "Select the video driver to install" "xf86-video-amdgpu\nxf86-video-ati\nxf86-video-intel\nnvidia"
-        case $ret in
-            xf86-video-amdgpu )
-                pkgs+=(xf86-video-amdgpu vulkan-radeon)
-                printf "Install 'corectrl' (AMD GPU OC utility)? [Y/n]:\n> "
-                read_input -e
-                case $ret in
-                    n|N ) ;;
-                    * ) aur_pkgs+=(corectrl);;
-                esac;;
-            xf86-video-ati ) pkgs+=(xf86-video-ati);;
-            xf86-video-intel ) pkgs+=(xf86-video-intel);;
-            nvidia ) pkgs+=(nvidia);;
-        esac
-    fi
-
-    printf "Install 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
-    read_input -e
-    case $ret in
-        y|Y ) pkgs+=(hplip);;
-        n|N ) return;;
-    esac
-}
-
-# gnome_after_install() {
-#     # TODO
-#     # restore dotfiles here
-#     # restore here gnome config (put in dotfiles?)
-#     # restore gnome extensions here (put in dotfiles?)
-#     # if corectrl command exists, restore here corectrl config (put in dotfiles?) + do this: https://gitlab.com/corectrl/corectrl/-/wikis/Setup
-#     # run 'hp-setup -i' here if hplip was selected for installation (if hp-setup command exists)
-# }
-
-##################################################
 
 pkgs=(
     base
@@ -107,8 +27,6 @@ pkgs=(
     os-prober
     dosfstools
 )
-
-aur_pkgs=()
 
 services=(
     NetworkManager
@@ -381,8 +299,19 @@ ask_username_and_password() {
 }
 
 ask_preset() {
+    printf "Downloading presets\n"
+    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh > /mnt/home/"$user"/archi/archi_presets.sh
+    # shellcheck source=/dev/null
+    source /mnt/home/"$user"/archi/archi_presets.sh
     printf "\n"
-    choose "Select a preset to add on top of the basic installation" "$(printf "%s\n" "${presets[@]}")\nnone"
+
+    # filter out 'none' if it exists
+    presets_aux=("${presets[@]}")
+    for elem in "${presets_aux[@]}"; do
+        [ "$elem" != "none" ] && presets_aux+=("$elem")
+    done
+
+    choose "Select a preset to add on top of the basic installation" "$(printf "%s\n" "${presets_aux[@]}")\nnone"
     preset=$ret
 }
 
@@ -420,10 +349,6 @@ EOF
 }
 
 install_system() {
-    # preset before install callback
-    [[ $(type -t "${preset}"_before_install) == "function" ]] && "${preset}"_before_install
-    next
-
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
@@ -440,7 +365,7 @@ install_system() {
     esac
 
     printf "Installing packages\n"
-    sed -i 's/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
+    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 5/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
     while ! pacstrap /mnt "${pkgs[@]}"; do
         printf "\nRetry? [Y/n]\n"
         read_input -e
@@ -450,25 +375,10 @@ install_system() {
     done
 
     printf "Updating pacman config\n"
-    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 10/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
+    sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 5/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
 
     set_hostname_user_and_passwords
     set_shell_timezone_clock_locales
-
-    # temporarily disable packagekit hook if it exists (prevents failure on package installation while chrooted)
-    mv -f /usr/share/libalpm/hooks/*packagekit-refresh.hook /tmp &> /dev/null || true
-
-    printf "Enabling access to the AUR\n"
-    git -C /mnt/home/"$user" clone https://aur.archlinux.org/yay.git
-    cd /mnt/home/"$user"/yay
-    extra-x86_64-build -c
-    cd
-    rm -rf /mnt/home/"$user"/yay
-    printf "Installing AUR packages\n"
-    arch-chroot /mnt yay -Sy --noconfirm "${aur_pkgs[*]}"
-
-    # enable back packagekit hook if it exists
-    mv -f /tmp/*packagekit-refresh.hook /usr/share/libalpm/hooks &> /dev/null || true
 
     printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
     printf "Enabling services\n"
@@ -479,9 +389,6 @@ install_system() {
     printf "Generating fstab\n"
     genfstab -U /mnt >> /mnt/etc/fstab
     printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /mnt/etc/fstab
-
-    # preset after install callback
-    [[ $(type -t "${preset}"_after_install) == "function" ]] && "${preset}"_after_install
 }
 
 install_grub() {
@@ -504,8 +411,28 @@ install_grub() {
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 }
 
+prepare_first_reboot() {
+    [ "$preset" = "none" ] && return
+
+    mkdir -p /mnt/home/"$user"/archi
+    printf "%s" "$preset" > /mnt/home/"$user"/archi/preset
+    script_path=/mnt/home/"$user"/archi/archi_finish_install.sh
+
+    printf "Downloading finish install script"
+    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh > "$script_path"
+    printf "[ -f %s ] && sh %s || printf 'Installation script not found\n'" "$script_path" "$script_path" > /mnt/home/"$user"/.zprofile
+}
+
 epilogue() {
-    printf "Installation completed, you can reboot now\n"
+    if [ "$preset" = "none" ]; then
+        choose "Installation completed, you can reboot or stay in the live session and reboot later" "reboot\ncontinue"
+    else
+        choose "Base installation completed, you can reboot (and continue to the final installation step after login - use the '$user' account not 'root') or stay in the live session and reboot later" "reboot\ncontinue"
+    fi
+
+    case $ret in
+        reboot ) reboot;;
+    esac
 }
 
 ##################################################
@@ -542,5 +469,6 @@ next
 install_system
 next
 install_grub
+prepare_first_reboot
 next
 epilogue
