@@ -82,8 +82,7 @@ update_system_clock() {
 wipe_ptables() {
     while true; do
         show_drives
-        printf "\nEnter a drive to wipe its partition tables ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
-        read_input
+        read_input "\nEnter a drive to wipe its partition tables ('/dev/sda' for example) and type 'done' when there is nothing else to do:"
         case $ret in
             done ) break;;
             * )
@@ -98,8 +97,7 @@ wipe_ptables() {
 partition_drives() {
     while true; do
         show_drives
-        printf "\nEnter a drive to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
-        read_input
+        read_input "\nEnter a drive to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:"
         case $ret in
             done ) break;;
             * )
@@ -114,8 +112,7 @@ partition_drives() {
 format_partitions() {
     while true; do
         show_drives
-        printf "\nEnter a partition to format ('/dev/sda1' for example) and type 'done' when there is nothing else to do:\n> "
-        read_input
+        read_input "\nEnter a partition to format ('/dev/sda1' for example) and type 'done' when there is nothing else to do:"
         case $ret in
             done ) break;;
             * )
@@ -128,12 +125,9 @@ format_partitions() {
 }
 
 mount_filesystems() {
-    umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
-
     while true; do
         show_drives
-        printf "\nEnter the partition to use as root volume ('/dev/sda1' for example):\n> "
-        read_input
+        read_input "\nEnter the partition to use as root volume ('/dev/sda1' for example):"
         if mount "$ret" /mnt; then
             break
         fi
@@ -144,15 +138,13 @@ mount_filesystems() {
 
     while true; do
         show_drives
-        printf "\nEnter a mountpoint ('/home' for example) or type 'done' if there is nothing else to do:\n> "
-        read_input
+        read_input "\nEnter a mountpoint ('/home' for example) or type 'done' if there is nothing else to do:"
         mountpoint=$ret
         case $ret in
             done ) break;;
             /* )
                 mkdir -p /mnt"$mountpoint"
-                printf "Select the partition to mount for '%s' ('/dev/sda2' for example):\n> " "$mountpoint"
-                read_input
+                read_input "Select the partition to mount for '$mountpoint' ('/dev/sda2' for example):"
                 if ! mount "$ret" /mnt"$mountpoint"; then
                     printf "Invalid input.\n\n"
                 else
@@ -171,18 +163,16 @@ ask_grub() {
         /bin/cp /etc/default/grub /tmp/grub
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /tmp/grub
         sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /tmp/grub
-        printf "\nEdit GRUB config? [y/N]:\n> "
-        read_input -e
+        read_input -e "\nEdit GRUB config? [y/N]:"
         case $ret in
-            y|Y ) nano /tmp/grub;;
+            y ) nano /tmp/grub;;
         esac
     fi
 }
 
 setup_swapfile() {
     while true; do
-        printf "\nEnter the swapfile size in MiB (0 = no swap):\n> "
-        read_input
+        read_input "\nEnter the swapfile size in MiB (0 = no swap):"
         case $ret in
             +(0) ) break;;
             +([0-9]) )
@@ -197,19 +187,16 @@ setup_swapfile() {
 }
 
 ask_hostname() {
-    printf "\nEnter the hostname ('arch-laptop' for example):\n> "
-    read_input
+    read_input "\nEnter the hostname ('arch-laptop' for example):"
     hostname=$ret
 }
 
 ask_root_password() {
     while true; do
-        printf "\nEnter the root password:\n> "
-        read_input -s
+        read_input -s "\nEnter the root password:"
         rootpasswd=$ret
 
-        printf "\nEnter the root password again:\n> "
-        read_input -s
+        read_input -s "\nEnter the root password again:"
         if [ "$rootpasswd" = "$ret" ]; then
             printf "\n"
             break;
@@ -220,17 +207,14 @@ ask_root_password() {
 }
 
 ask_username_and_password() {
-    printf "\nEnter the new username:\n> "
-    read_input
+    read_input "\nEnter the new username:"
     user=$ret
 
     while true; do
-        printf "\nEnter the password for '%s':\n> " "$user"
-        read_input -s
+        read_input -s "\nEnter the password for '$user':"
         userpasswd=$ret
 
-        printf "\nEnter the user password for '%s' again:\n> " "$user"
-        read_input -s
+        read_input -s "\nEnter the user password for '$user' again:"
         if [ "$userpasswd" = "$ret" ]; then
             break
         else
@@ -279,7 +263,7 @@ set_shell_timezone_clock_locales() {
     hwclock --systohc
 
     printf "Generating the locales\n"
-    printf "fr_FR.UTF-8 UTF-8\n" > /etc/locale.gen
+    printf "fr_FR.UTF-8 UTF-8\nen_US.UTF-8 UTF-8\n" > /etc/locale.gen
     locale-gen &> /dev/null
     printf "LANG=fr_FR.UTF-8" > /etc/locale.conf
 
@@ -307,10 +291,9 @@ install_system() {
     printf "Installing packages\n"
     sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 5/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
     while ! pacstrap /mnt "${pkgs[@]}"; do
-        printf "\nRetry? [Y/n]\n"
-        read_input -e
+        read_input_yn "\nRetry?" "Y/n"
         case $ret in
-            n|N ) return 1;;
+            n ) return 1;;
         esac
     done
 
@@ -338,10 +321,9 @@ install_grub() {
     if [ ! -f /tmp/grub ]; then
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /mnt/etc/default/grub
         sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub
-        printf "\nEdit GRUB config? [y/N]:\n> "
-        read_input -e
+        read_input_yn "\nEdit GRUB config?" "y/N"
         case $ret in
-            y|Y ) nano /mnt/etc/default/grub;;
+            y ) nano /mnt/etc/default/grub;;
         esac
     else
         /bin/cp /tmp/grub /mnt/etc/default/grub

@@ -17,24 +17,27 @@ next() {
 "
 }
 
-# TODO add read_input_yn function to make easy Y/n or y/N prompts
-
 # arguments: '-s': don't show input (useful for passwords); '-e': allow empty input.
 # returns result in 'ret' variable
-# TODO add left right arrow support for inputs to move cursor (up/down for history?)
 read_input() {
     _secret=0
     _allow_empty=0
+    _prompt=""
     for arg in "$@"; do
-        [ "$arg" = "-s" ] && _secret=1
-        [ "$arg" = "-e" ] && _allow_empty=1
+        case $arg in
+            -s ) _secret=1;;
+            -e ) _allow_empty=1;;
+            * ) [ -z "$_prompt" ] && _prompt=$arg || _prompt="$_prompt $arg";;
+        esac
     done
 
     while true; do
+        # shellcheck disable=SC2059
+        printf "$_prompt\n"
         if [ $_secret -eq 1 ]; then
-            read -rs ret
+            read -ersp "> " ret
         else
-            read -r ret
+            read -erp "> " ret
         fi
         case $ret in
             "" )
@@ -48,6 +51,25 @@ read_input() {
     done
 }
 
+# first argument is the prompt, second argument is 'Y/n' (default is yes), 'y/N' (default is no) or 'y/n' (no default)
+# returns 'y' or 'n' in 'ret' variable
+read_input_yn() {
+    while true; do
+        printf "$1 [%s]\n" "$2"
+        read -erp "> " ret
+        case ${ret,,} in # lowercase ret
+            "" )
+                case $2 in
+                    "Y/n" ) ret=y; return;;
+                    "y/N" ) ret=n; return;;
+                esac;;
+            y|yes ) ret=y return;;
+            n|no ) ret=n return;;
+        esac
+        printf "Invalid input.\n\n"
+    done
+}
+
 # first argument is the prompt, second argument is the newline ('\n') separated choices
 # returns result in 'ret' variable
 choose() {
@@ -58,7 +80,7 @@ choose() {
     [ ${#choices[@]} -eq 1 ] && ret=${choices[0]} && return
 
     while true; do
-        printf "%s (leave blank for '%s'):\n%s\n> " "$1" "${choices[0]}" "$to_show"
+        printf "$1 (leave blank for '%s'):\n%s" "${choices[0]}" "$to_show"
         read_input -e
 
         case $ret in
@@ -79,4 +101,3 @@ choose() {
         printf "Invalid input\n\n"
     done
 }
-

@@ -3,6 +3,8 @@
 # Add presets in this file by adding its name in the 'presets' array and creating its function.
 #   - The presets can't have the name 'none' as it is reserved (it will be ignored if added here).
 #   - A preset's function must follow this naming rule: ${preset_name}_install
+# See archi_funcs.sh for useful helper functions you can use for presets (don't source the file
+# because it is automatically done by the installation scripts)
 
 set -eu
 
@@ -64,32 +66,25 @@ gnome_install() {
         case $ret in
             xf86-video-amdgpu )
                 pkgs+=("$ret" vulkan-radeon)
-                printf "Install 'corectrl' (AMD GPU OC utility)? [Y/n]:\n> "
-                read_input -e
+                read_input_yn "\nInstall 'corectrl' (AMD GPU OC utility)?" "Y/n"
                 case $ret in
-                    n|N ) ;;
-                    * ) pkgs+=(corectrl);;
+                    y ) pkgs+=(corectrl);;
                 esac;;
         esac
         pkgs+=("$ret")
     fi
 
-    printf "\nInstall 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
-    while true; do
-        read_input -e
-        case $ret in
-            y|Y|"" ) pkgs+=(hplip); break;;
-            n|N ) break;;
-            * ) printf "Invalid input\n\n> ";;
-        esac
-    done
+    read_input_yn "\nInstall 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)?" "Y/n"
+    case $ret in
+        y ) pkgs+=(hplip);;
+    esac
 
     printf "\nInstalling and updating packages\n"
     while ! yay -Syu "${pkgs[@]}" --noconfirm; do
-        printf "\nRetry? [Y/n]\n"
-        read_input -e
+        printf 
+        read_input_yn "\nRetry?" "Y/n"
         case $ret in
-            n|N ) return 1;;
+            n ) return 1;;
         esac
     done
 
