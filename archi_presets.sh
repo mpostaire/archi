@@ -118,10 +118,10 @@ gnome_install() {
     )
 
     printf "Installing 'yay' (AUR helper)\n"
-    sudo pacman -S --needed git base-devel
+    sudo pacman -S --needed --noconfirm git base-devel
     git clone https://aur.archlinux.org/yay.git
     cd yay
-    makepkg -csi
+    makepkg -csi --noconfirm
     cd ..
 
     if [ "$(systemd-detect-virt --vm)" = "none" ]; then
@@ -147,7 +147,7 @@ gnome_install() {
     esac
 
     printf "\nInstalling and updating packages\n"
-    yay -Syu "${pkgs[@]}"
+    yay -Syu "${pkgs[@]}" --noconfirm
 
     printf "\nEnabling services\n"
     for elem in "${services[@]}"; do

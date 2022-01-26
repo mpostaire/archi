@@ -48,9 +48,12 @@ read_input() {
 welcome() {
     preset=$(cat "$HOME"/archi/preset)
     printf "Proceeding installation of the '%s' preset\n\n" "$preset"
+
+    printf "Installing 'archlinux-keyring'\n"
+    pacman -Sy --noconfirm archlinux-keyring
+
     # shellcheck source=/dev/null
     source "$HOME"/archi/archi_presets.sh
-
     cd "$HOME"/archi/
     "$preset"_install
     cd
@@ -58,11 +61,11 @@ welcome() {
 
 cleanup() {
     printf "Cleaning up\n"
-    sed -i '/printf Installation script not found/d' "$HOME"/.zprofile
+    sed -i "/printf 'Installation script not found\n'/d" "$HOME"/.zprofile
     rm -rf "$HOME"/archi
     printf "Installation complete, rebooting now\n"
     sleep 1
-    reboot
+    sudo reboot
 }
 
 next

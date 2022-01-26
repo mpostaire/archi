@@ -362,6 +362,9 @@ install_system() {
             pkgs+=(amd-ucode);;
     esac
 
+    printf "Installing 'archlinux-keyring'\n"
+    pacman -Sy --noconfirm archlinux-keyring
+
     printf "Installing packages\n"
     sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 5/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /etc/pacman.conf
     while ! pacstrap /mnt "${pkgs[@]}"; do
