@@ -353,9 +353,6 @@ install_system() {
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
 
-    printf "Installing 'archlinux-keyring' and 'devtools' on the live session\n"
-    pacman -Sy --noconfirm archlinux-keyring devtools
-
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* )
             printf "Intel CPU detected\n"
@@ -420,14 +417,12 @@ prepare_first_reboot() {
     script_path=/home/"$user"/archi/archi_finish_install.sh
     cp archi_presets.sh /mnt/home/"$user"/archi/archi_presets.sh
 
-    printf "Downloading finish install script"
+    printf "\nDownloading finish install script\n"
     curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh > /mnt"$script_path"
     printf "if [ -f %s ]; then\n\tsh %s\nelse\n\tprintf 'Installation script not found\n'\nfi\n" "$script_path" "$script_path" > /mnt/home/"$user"/.zprofile
 
-    if [ -f %s ]; then sh %s else printf 'Installation script not found\n'; fi
-
-    chown -R "$user":"$user" /mnt/home/"$user"/archi
-    chown "$user":"$user" /mnt/home/"$user"/.zprofile
+    arch-chroot /mnt chown -R "$user":"$user" /home/"$user"/archi
+    arch-chroot /mnt chown "$user":"$user" /home/"$user"/.zprofile
 }
 
 epilogue() {
