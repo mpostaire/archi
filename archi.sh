@@ -302,12 +302,13 @@ ask_preset() {
     printf "\n\nDownloading presets\n"
     curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh
     # shellcheck source=/dev/null
-    source archi_presets.sh
+    source ./archi_presets.sh
     printf "\n"
 
     # filter out 'none' if it exists
-    presets_aux=("${presets[@]}")
-    for elem in "${presets_aux[@]}"; do
+    presets_aux=()
+    # shellcheck disable=SC2154
+    for elem in "${presets[@]}"; do
         [ "$elem" != "none" ] && presets_aux+=("$elem")
     done
 
@@ -440,36 +441,38 @@ epilogue() {
 
 # PREINSTALL
 
-umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
+# umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
 
-detect_efi
-detect_virt
-next
-ask_keyboard_layout
-next
-update_system_clock
-next
-partition_drives
-next
-format_partitions
-next
-mount_filesystems
-next
-ask_grub
-next
-setup_swapfile
-next
-ask_hostname
-ask_root_password
-ask_username_and_password
 ask_preset
 
-# INSTALL
+# detect_efi
+# detect_virt
+# next
+# ask_keyboard_layout
+# next
+# update_system_clock
+# next
+# partition_drives
+# next
+# format_partitions
+# next
+# mount_filesystems
+# next
+# ask_grub
+# next
+# setup_swapfile
+# next
+# ask_hostname
+# ask_root_password
+# ask_username_and_password
+# ask_preset
 
-next
-install_system
-next
-install_grub
-prepare_first_reboot
-next
-epilogue
+# # INSTALL
+
+# next
+# install_system
+# next
+# install_grub
+# prepare_first_reboot
+# next
+# epilogue
