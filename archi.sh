@@ -3,7 +3,6 @@
 # Thanks to https://github.com/classy-giraffe/easy-arch and https://github.com/helmuthdu/aui/
 
 set -eu
-shopt -s extglob
 
 pkgs=(
     base
@@ -28,81 +27,6 @@ services=(
     reflector.timer
 )
 
-next() {
-    clear
-    printf "
-    _             _     _       _     
-   / \   _ __ ___| |__ (_)  ___| |__  
-  / _ \ | '__/ __| '_ \| | / __| '_ \ 
- / ___ \| | | (__| | | | |_\__ \ | | |
-/_/   \_\_|  \___|_| |_|_(_)___/_| |_|
-
---------------------------------------
-
-"
-}
-
-# arguments: '-s': don't show input (useful for passwords); '-e': allow empty input.
-# returns result in 'ret' variable
-# TODO add left right arrow support for inputs to move cursor (up/down for history?)
-read_input() {
-    _secret=0
-    _allow_empty=0
-    for arg in "$@"; do
-        [ "$arg" = "-s" ] && _secret=1
-        [ "$arg" = "-e" ] && _allow_empty=1
-    done
-
-    while true; do
-        if [ $_secret -eq 1 ]; then
-            read -rs ret
-        else
-            read -r ret
-        fi
-        case $ret in
-            "" )
-                if [ $_allow_empty -eq 1 ]; then
-                    return
-                fi;;
-            *\ * ) ;;
-            * ) return;;
-        esac
-        printf "Invalid input.\n\n> "
-    done
-}
-
-# first argument is the prompt, second argument is the newline ('\n') separated choices
-# returns result in 'ret' variable
-choose() {
-    mapfile -t choices < <(echo -e "$2")
-    to_show=$(echo -e "$2" | nl -s ') ')
-
-    [ ${#choices[@]} -eq 0 ] && return 1
-    [ ${#choices[@]} -eq 1 ] && ret=${choices[0]} && return
-
-    while true; do
-        printf "%s (leave blank for '%s'):\n%s\n> " "$1" "${choices[0]}" "$to_show"
-        read_input -e
-
-        case $ret in
-            "" ) ret=${choices[0]}; return;;
-            +([0-9]) )
-                ret=$((ret -= 1))
-                if ((ret >= 0 && ret < ${#choices[@]})); then
-                    ret=${choices[$ret]}
-                    return
-                fi;;
-            * )
-                for elem in "${choices[@]}"; do
-                    if [ "$elem" = "$ret" ]; then
-                        return
-                    fi
-                done;;
-        esac
-        printf "Invalid input\n\n"
-    done
-}
-
 show_drives() {
     lsblk -po NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,MOUNTPOINTS
 }
@@ -113,6 +37,14 @@ detect_efi() {
         printf "This install script only supports BIOS mode for now.\n"
         exit 1
     fi
+}
+
+download_scripts() {
+    printf "\nDownloading scripts\n"
+    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh
+    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh
+    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_funcs.sh
+    source ./archi_funcs.sh
 }
 
 detect_virt() {
@@ -145,6 +77,22 @@ ask_keyboard_layout() {
 
 update_system_clock() {
     timedatectl set-ntp true
+}
+
+wipe_ptables() {
+    while true; do
+        show_drives
+        printf "\nEnter a drive to wipe its partition tables ('/dev/sda' for example) and type 'done' when there is nothing else to do:\n> "
+        read_input
+        case $ret in
+            done ) break;;
+            * )
+                if ! wipefs -a -f "$ret"; then
+                    printf "Invalid input.\n\n"
+                fi
+                next;;
+        esac
+    done
 }
 
 partition_drives() {
@@ -241,7 +189,6 @@ setup_swapfile() {
                 if dd if=/dev/zero of=/mnt/swapfile bs=1M count="$ret" status=progress; then
                     chmod 600 /mnt/swapfile
                     mkswap /mnt/swapfile
-                    # TODO swapon??
                     break
                 fi;;
             * ) printf "Invalid input\n\n";;
@@ -293,9 +240,7 @@ ask_username_and_password() {
 }
 
 ask_preset() {
-    printf "\n\nDownloading presets\n"
-    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh
-    # shellcheck source=/dev/null
+    # shellcheck source=archi_presets.sh
     source ./archi_presets.sh
     printf "\n"
 
@@ -411,11 +356,11 @@ prepare_first_reboot() {
 
     mkdir -p /mnt/home/"$user"/archi
     printf "%s" "$preset" > /mnt/home/"$user"/archi/preset
-    script_path=/home/"$user"/archi/archi_finish_install.sh
     cp archi_presets.sh /mnt/home/"$user"/archi/archi_presets.sh
-
-    printf "\nDownloading finish install script\n"
-    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh > /mnt"$script_path"
+    cp archi_funcs.sh /mnt/home/"$user"/archi/archi_funcs.sh
+    
+    script_path=/home/"$user"/archi/archi_finish_install.sh
+    cp archi_finish_install.sh /mnt/"$script_path"
     printf "if [ -f %s ]; then\n\tsh %s\nelse\n\tprintf 'Installation script not found\n'\nfi\n" "$script_path" "$script_path" > /mnt/home/"$user"/.zprofile
 
     arch-chroot /mnt chown -R "$user":"$user" /home/"$user"/archi
@@ -438,14 +383,17 @@ epilogue() {
 
 # PREINSTALL
 
-# umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
+umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
 
 detect_efi
+download_scripts
 detect_virt
 next
 ask_keyboard_layout
 next
 update_system_clock
+next
+wipe_ptables
 next
 partition_drives
 next
