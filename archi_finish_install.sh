@@ -47,7 +47,7 @@ read_input() {
 
 welcome() {
     preset=$(cat "$HOME"/archi/preset)
-    printf "Proceeding installation of the '%s' preset\n\n> " "$preset"
+    printf "Proceeding installation of the '%s' preset\n\n" "$preset"
     # shellcheck source=/dev/null
     source "$HOME"/archi/archi_presets.sh
 

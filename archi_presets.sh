@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eu
+shopt -s extglob
 
 # TODO comment explaining how to add presets
 
@@ -117,7 +118,7 @@ gnome_install() {
     )
 
     printf "Installing 'yay' (AUR helper)\n"
-    pacman -S --needed git base-devel
+    sudo pacman -S --needed git base-devel
     git clone https://aur.archlinux.org/yay.git
     cd yay
     makepkg -csi
@@ -138,10 +139,18 @@ gnome_install() {
         pkgs+=("$ret")
     fi
 
-    printf "Install 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
+    printf "\nInstall 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
     read_input -e
     case $ret in
         y|Y ) pkgs+=(hplip);;
         n|N ) return;;
     esac
+
+    printf "\nInstalling and updating packages\n"
+    yay -Syu "${pkgs[@]}"
+
+    printf "\nEnabling services\n"
+    for elem in "${services[@]}"; do
+        systemctl enable "$elem"
+    done
 }

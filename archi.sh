@@ -417,12 +417,17 @@ prepare_first_reboot() {
 
     mkdir -p /mnt/home/"$user"/archi
     printf "%s" "$preset" > /mnt/home/"$user"/archi/preset
-    script_path=/mnt/home/"$user"/archi/archi_finish_install.sh
+    script_path=/home/"$user"/archi/archi_finish_install.sh
     cp archi_presets.sh /mnt/home/"$user"/archi/archi_presets.sh
 
     printf "Downloading finish install script"
-    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh > "$script_path"
-    printf "[ -f %s ] && sh %s || printf 'Installation script not found\n'" "$script_path" "$script_path" > /mnt/home/"$user"/.zprofile
+    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh > /mnt"$script_path"
+    printf "if [ -f %s ]; then\n\tsh %s\nelse\n\tprintf 'Installation script not found\n'\nfi\n" "$script_path" "$script_path" > /mnt/home/"$user"/.zprofile
+
+    if [ -f %s ]; then sh %s else printf 'Installation script not found\n'; fi
+
+    chown -R "$user":"$user" /mnt/home/"$user"/archi
+    chown "$user":"$user" /mnt/home/"$user"/.zprofile
 }
 
 epilogue() {
@@ -443,36 +448,34 @@ epilogue() {
 
 # umount -R /mnt &> /dev/null || true # prevent umount failure to exit this script
 
+detect_efi
+detect_virt
+next
+ask_keyboard_layout
+next
+update_system_clock
+next
+partition_drives
+next
+format_partitions
+next
+mount_filesystems
+next
+ask_grub
+next
+setup_swapfile
+next
+ask_hostname
+ask_root_password
+ask_username_and_password
 ask_preset
 
-# detect_efi
-# detect_virt
-# next
-# ask_keyboard_layout
-# next
-# update_system_clock
-# next
-# partition_drives
-# next
-# format_partitions
-# next
-# mount_filesystems
-# next
-# ask_grub
-# next
-# setup_swapfile
-# next
-# ask_hostname
-# ask_root_password
-# ask_username_and_password
-# ask_preset
+# INSTALL
 
-# # INSTALL
-
-# next
-# install_system
-# next
-# install_grub
-# prepare_first_reboot
-# next
-# epilogue
+next
+install_system
+next
+install_grub
+prepare_first_reboot
+next
+epilogue
