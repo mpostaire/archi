@@ -2,12 +2,6 @@
 
 # Thanks to https://github.com/classy-giraffe/easy-arch and https://github.com/helmuthdu/aui/
 
-# TODO make this the base install script and make another script for the first startup script.
-# the first startup script will be placed (during the base install) on the newly installed system and
-# autorun during the first startup after user login of group $user. If a GUI session is detected, spawn a terminal asking
-# Y/n to continue post installation. if in console, just do it there.
-# after it's done, remove the script and whatever what was used to run it
-
 set -eu
 shopt -s extglob
 

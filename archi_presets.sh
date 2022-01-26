@@ -140,11 +140,15 @@ gnome_install() {
     fi
 
     printf "\nInstall 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)? [Y/n]:\n> "
-    read_input -e
-    case $ret in
-        y|Y ) pkgs+=(hplip);;
-        n|N ) return;;
-    esac
+    # TODO make function prompt yes/no like 'choose'
+    while true; do
+        read_input -e
+        case $ret in
+            y|Y|"" ) pkgs+=(hplip); break;;
+            n|N ) break;;
+            * ) printf "Invalid input\n\n> ";;
+        esac
+    done
 
     printf "\nInstalling and updating packages\n"
     yay -Syu "${pkgs[@]}" --noconfirm
