@@ -300,7 +300,7 @@ ask_username_and_password() {
 
 ask_preset() {
     printf "\n\nDownloading presets\n"
-    curl -LJ https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh > archi_presets.sh
+    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh
     # shellcheck source=/dev/null
     source archi_presets.sh
     printf "\n"
