@@ -24,9 +24,7 @@ welcome() {
 
     # shellcheck source=archi_presets.sh
     source "$HOME"/archi/archi_presets.sh
-    cd "$HOME"/archi/
     "$preset"_install
-    cd
 }
 
 cleanup() {
