@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Add presets in this file by adding its name in the 'presets' array and creating its function.
-#   - The presets can't have the name 'none' as it is reserved (it will be ignored if added here).
+#   - A preset can't be named 'none' as it is reserved (it will be ignored if added here).
 #   - A preset's function must follow this naming rule: ${preset_name}_install
-# See archi_funcs.sh for useful helper functions you can use for presets (don't source the file
-# because it is automatically done by the installation scripts)
+# See archi_funcs.sh for useful helper functions (don't source the file because it is automatically
+# done by the installation scripts)
 
 set -eu
 
@@ -38,6 +38,8 @@ gnome_install() {
         chafa
         youtube-dl
         wget
+        stow
+        discord
         chrome-gnome-shell
         megasync-bin
         nautilus-megasync
@@ -51,13 +53,6 @@ gnome_install() {
         cups.socket
         gdm.service
     )
-
-    printf "Installing 'yay' (AUR helper)\n"
-    sudo pacman -S --needed --noconfirm git base-devel
-    git clone https://aur.archlinux.org/yay.git
-    cd yay
-    makepkg -csi --noconfirm
-    cd ..
 
     detect_vdriver
     # shellcheck disable=SC2154 # this script is never called directly but sourced in a script containing the necessary functions
@@ -77,6 +72,13 @@ gnome_install() {
         y ) pkgs+=(hplip);;
     esac
 
+    printf "Installing 'yay' (AUR helper)\n"
+    sudo pacman -S --needed --noconfirm git base-devel
+    git clone https://aur.archlinux.org/yay.git
+    cd yay
+    makepkg -csi --noconfirm
+    cd ..
+
     printf "\nInstalling and updating packages\n"
     while ! yay -Syu "${pkgs[@]}" --noconfirm; do
         printf 
@@ -91,11 +93,58 @@ gnome_install() {
         systemctl enable "$elem"
     done
 
-    # TODO
-    # restore dotfiles here
-    # restore here gnome config (put in dotfiles?)
-    # restore gnome extensions here (put in dotfiles?)
-    # if corectrl command exists, restore here corectrl config (put in dotfiles?) + do this: https://gitlab.com/corectrl/corectrl/-/wikis/Setup
-    # run 'hp-setup -i' here if hplip was selected for installation (if hp-setup command exists)
-    # megasync autostart
+    printf "\nRestoring dotfiles\n"
+    git clone https://github.com/mpostaire/dotfiles.git
+    cd dotfiles
+    stow zsh misc
+    cd
+    sudo cp -Tr "$HOME"/.zsh/ /root/.zsh
+    sudo cp "$HOME"/.zshrc /root/.zshrc
+
+    printf "\nRestoring gnome config and extensions\n"
+    # TODO restore gsettings
+
+    printf "Disabling Wayland\n"
+    sudo sed -i 's/^#WaylandEnable=.*$/WaylandEnable=false/' /etc/gdm/custom.conf
+
+    printf "Set GDM keyboard layout and enable touchpad tap-to-click\n"
+    sudo -u gdm dbus-launch gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click 'true'
+    kbd="us"
+    case "$(cat /etc/vconsole.conf)" in
+        *fr* ) kbd="fr";;
+        *be* ) kbd="be";;
+        *us* ) kbd="us";;
+    esac
+    printf 'Section "InputClass"
+        Identifier "system-keyboard"
+        MatchIsKeyboard "on"
+        Option "XkbLayout" "%s"\nEndSection' "$kbd" > /etc/X11/xorg.conf.d/00-keyboard.conf
+
+
+    if command -v corectrl &> /dev/null; then
+        printf "\nRestoring corectrl config\n"
+        # TODO restore profile
+        cp /usr/share/applications/org.corectrl.corectrl.desktop ~/.config/autostart/org.corectrl.corectrl.desktop
+
+        printf "Adding corectrl polkit rule\n"
+        printf 'polkit.addRule(function(action, subject) {
+    if ((action.id == "org.corectrl.helper.init" ||
+        action.id == "org.corectrl.helperkiller.init") &&
+        subject.local == true &&
+        subject.active == true &&
+        subject.isInGroup("%s")) {
+            return polkit.Result.YES;
+    }\n});\n' "$USER" | sudo tee /etc/polkit-1/rules.d/90-corectrl.rules
+
+        printf "Unlocking full AMD GPU controls\n"
+        sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="[^"]*/& amdgpu.ppfeaturemask=0xffffffff/' /etc/default/grub
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
+    fi
+
+    if commmand -v hp-setup &> /dev/null; then
+        printf "\nInitializing hplip\n"
+        hp-setup -i
+    fi
+
+    cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart
 }

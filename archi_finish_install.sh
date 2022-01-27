@@ -17,7 +17,7 @@ welcome() {
     rm -rf "$HOME"/.zprofile
 
     preset=$(cat "$HOME"/archi/preset)
-    printf "Proceeding installation of the '%s' preset\n\n" "$preset"
+    printf "Proceeding installation of the '%s' preset (you may be asked for your password several times)\n\n" "$preset"
 
     printf "Installing 'archlinux-keyring'\n"
     sudo pacman -Sy --noconfirm archlinux-keyring
