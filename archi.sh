@@ -3,6 +3,7 @@
 # Thanks to https://github.com/classy-giraffe/easy-arch and https://github.com/helmuthdu/aui/
 
 set -eu
+shopt -s extglob
 
 pkgs=(
     base
