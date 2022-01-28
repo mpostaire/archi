@@ -208,5 +208,5 @@ gnome_install() {
         hp-setup -i
     fi
 
-    cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart
+    cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
 }
