@@ -208,5 +208,22 @@ gnome_install() {
         hp-setup -i
     fi
 
+    # autostart MEGA
     cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
+
+    # make xdg's Music user dir a symlink pointing to MEGA's Music dir
+    music_path=$(grep XDG_MUSIC_DIR "$HOME"/.config/user-dirs.dirs)
+    music_path=${music_path#*\"}
+    music_path=$(eval printf "%s" "${music_path%\"}")
+    mkdir -p "$HOME"/MEGA/Musique
+    ln -fs "$HOME"/MEGA/Musique "$music_path"
+
+    # add empty text file to xdg's templates dir
+    templates_path=$(grep XDG_TEMPLATES_DIR "$HOME"/.config/user-dirs.dirs)
+    templates_path=${templates_path#*\"}
+    templates_path=$(eval printf "%s" "${templates_path%\"}")
+    touch "$templates_path/Fichier sans titre"
+
+    # create 'MEGA' and 'COURS' bookmarks for nautilus
+    printf "file://%s/MEGA/COURS\nfile://%s/MEGA" >> "$HOME" "$HOME" "$HOME"/.config/gtk-3.0/bookmarks
 }
