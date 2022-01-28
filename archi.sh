@@ -165,7 +165,7 @@ ask_grub() {
         /bin/cp /etc/default/grub grub.template
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' grub.template
         sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' grub.template
-        read_input_yn "\nEdit GRUB config? [y/N]:"
+        read_input_yn "\nEdit GRUB config?" "y/N"
         case $ret in
             y ) nano grub.template;;
         esac
