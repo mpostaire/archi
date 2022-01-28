@@ -162,26 +162,26 @@ ask_grub() {
     grub_drive="$ret"
 
     if [ -f /etc/default/grub ]; then
-        /bin/cp /etc/default/grub /tmp/grub
-        sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /tmp/grub
-        sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /tmp/grub
-        read_input -e "\nEdit GRUB config? [y/N]:"
+        /bin/cp /etc/default/grub grub.template
+        sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' grub.template
+        sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' grub.template
+        read_input_yn "\nEdit GRUB config? [y/N]:"
         case $ret in
-            y ) nano /tmp/grub;;
+            y ) nano grub.template;;
         esac
     fi
 }
 
 setup_swapfile() {
     while true; do
-        read_input "\nEnter the swapfile size in MiB (0 = no swap):"
+        read_input "\nEnter the swapfile size in MiB (0 = disable swap):"
         case $ret in
-            +(0) ) break;;
+            +(0) ) return;;
             +([0-9]) )
                 if dd if=/dev/zero of=/mnt/swapfile bs=1M count="$ret" status=progress; then
                     chmod 600 /mnt/swapfile
                     mkswap /mnt/swapfile
-                    break
+                    return
                 fi;;
             * ) printf "Invalid input\n\n";;
         esac
@@ -321,7 +321,7 @@ install_grub() {
     printf "Installing GRUB\n"
 
     # If we didn't find the gub default config earlier, ask to edit here.
-    if [ ! -f /tmp/grub ]; then
+    if [ ! -f grub.template ]; then
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /mnt/etc/default/grub
         sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub
         read_input_yn "\nEdit GRUB config?" "y/N"
@@ -329,7 +329,7 @@ install_grub() {
             y ) nano /mnt/etc/default/grub;;
         esac
     else
-        /bin/cp /tmp/grub /mnt/etc/default/grub
+        /bin/cp grub.template /mnt/etc/default/grub
     fi
 
     arch-chroot /mnt grub-install --target=i386-pc "$grub_drive"
