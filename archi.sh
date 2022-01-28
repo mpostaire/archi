@@ -164,7 +164,7 @@ ask_grub() {
     if [ -f /etc/default/grub ]; then
         /bin/cp /etc/default/grub grub.template
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' grub.template
-        sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' grub.template
+        sed -ri 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' grub.template
         read_input_yn "\nEdit GRUB config?" "y/N"
         case $ret in
             y ) nano grub.template;;
@@ -323,7 +323,7 @@ install_grub() {
     # If we didn't find the gub default config earlier, ask to edit here.
     if [ ! -f grub.template ]; then
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /mnt/etc/default/grub
-        sed -ir 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub
+        sed -ri 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub
         read_input_yn "\nEdit GRUB config?" "y/N"
         case $ret in
             y ) nano /mnt/etc/default/grub;;
