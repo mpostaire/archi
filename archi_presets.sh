@@ -99,7 +99,7 @@ gnome_install() {
     rm -rf dotfiles
     git clone https://github.com/mpostaire/dotfiles.git
     cd dotfiles
-    stow zsh misc
+    stow zsh misc defaultapps
     cd
     sudo cp -Tr "$HOME"/.zsh/ /root/.zsh
     sudo cp "$HOME"/.zshrc /root/.zshrc
@@ -165,13 +165,6 @@ gnome_install() {
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ use-system-font false
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ use-theme-colors false
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ visible-name 'One Dark'
-
-    # TODO fix default apps (wip)
-    # investigate ~/.config/mimeapps.list in both host and vm and https://wiki.archlinux.org/title/XDG_MIME_Applications#mimeapps.list to understand better and maybe have a good default
-    # gio mime application/x-shellscript org.gnome.gedit.desktop
-    # gio mime application/x-desktop org.gnome.gedit.desktop
-    # gio mime text/markdown org.gnome.gedit.desktop
-    # gio mime text/plain org.gnome.gedit.desktop
 
     printf "Disabling Wayland\n"
     sudo sed -i 's/^#WaylandEnable=.*$/WaylandEnable=false/' /etc/gdm/custom.conf
