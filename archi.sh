@@ -43,9 +43,7 @@ detect_efi() {
 
 download_scripts() {
     printf "\nDownloading scripts\n"
-    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_presets.sh
-    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_finish_install.sh
-    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/archi_funcs.sh
+    curl -LJO https://raw.githubusercontent.com/mpostaire/archi/master/{archi_presets,archi_finish_install,archi_funcs}.sh
     source ./archi_funcs.sh
 }
 
