@@ -127,7 +127,7 @@ gnome_install() {
     gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 20
     gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 2177
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type nothing
-    gsettings set org.gnome.settings-daemon.plugins.power.sleep-inactive-battery-timeout 900
+    gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-timeout 900
     gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
     gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'thunderbird.desktop', 'steam.desktop', 'visual-studio-code.desktop', 'rhythmbox.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Software.desktop']"
     gsettings set org.gnome.shell.weather automatic-location true
@@ -143,7 +143,7 @@ gnome_install() {
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ binding '<Primary><Alt>Delete'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ command 'gnome-system-monitor'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ name 'Moniteur système'
-    gsettings set org.gnome.settings-daemon.plugins.media-keys logout []
+    gsettings set org.gnome.settings-daemon.plugins.media-keys logout "[]"
     gsettings set org.gnome.settings-daemon.plugins.media-keys next "['<Primary>KP_6']"
     gsettings set org.gnome.settings-daemon.plugins.media-keys play "['<Primary>KP_Divide']"
     gsettings set org.gnome.settings-daemon.plugins.media-keys previous "['<Primary>KP_4']"
@@ -153,8 +153,8 @@ gnome_install() {
 
     # terminal profile
     gsettings set org.gnome.Terminal.Legacy.Settings theme-variant dark
-    gsettings set org.gnome.Terminal.Legacy.ProfilesList default 'd16e38e4-e361-47d5-bc6d-81ac2769dd8c'
-    gsettings set org.gnome.Terminal.Legacy.ProfilesList list "['d16e38e4-e361-47d5-bc6d-81ac2769dd8c']"
+    gsettings set org.gnome.Terminal.ProfilesList default 'd16e38e4-e361-47d5-bc6d-81ac2769dd8c'
+    gsettings set org.gnome.Terminal.ProfilesList list "['d16e38e4-e361-47d5-bc6d-81ac2769dd8c']"
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ audible-bell false
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ background-color '#282c34'
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ bold-color '#ABB2BF'
