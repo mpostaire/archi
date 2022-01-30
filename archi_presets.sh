@@ -103,6 +103,7 @@ gnome_install() {
     cd
     sudo cp -Tr "$HOME"/.zsh/ /root/.zsh
     sudo cp "$HOME"/.zshrc /root/.zshrc
+    sudo cp "$HOME"/.bashrc /root/.bashrc
 
     printf "\nRestoring gnome config\n"
     # gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/gnome/adwaita-timed.xml # use this to set a wallpaper
