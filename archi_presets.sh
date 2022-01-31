@@ -204,7 +204,7 @@ gnome_install() {
         sudo grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
-    if commmand -v hp-setup &> /dev/null; then
+    if command -v hp-setup &> /dev/null; then
         printf "\nInitializing hplip\n"
         hp-setup -i
     fi
