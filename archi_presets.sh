@@ -130,7 +130,7 @@ gnome_install() {
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type nothing
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-timeout 900
     gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
-    gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'thunderbird.desktop', 'steam.desktop', 'visual-studio-code.desktop', 'rhythmbox.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Software.desktop']"
+    gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Software.desktop', 'thunderbird.desktop', 'visual-studio-code.desktop', 'rhythmbox.desktop', 'steam.desktop', 'org.gnome.Calendar.desktop']"
     gsettings set org.gnome.shell.weather automatic-location true
     gsettings set org.gnome.software download-updates true
     gsettings set org.gnome.software download-updates-notify true
