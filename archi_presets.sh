@@ -226,5 +226,5 @@ gnome_install() {
     touch "$templates_path/Fichier sans titre"
 
     # create 'MEGA' and 'COURS' bookmarks for nautilus
-    printf "file://%s/MEGA/COURS\nfile://%s/MEGA" >> "$HOME" "$HOME" "$HOME"/.config/gtk-3.0/bookmarks
+    printf "file://%s/MEGA/COURS\nfile://%s/MEGA" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
 }
