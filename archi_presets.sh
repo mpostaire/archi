@@ -212,12 +212,19 @@ gnome_install() {
     # autostart MEGA
     cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
 
-    # make xdg's Music user dir a symlink pointing to MEGA's Music dir
-    music_path=$(grep XDG_MUSIC_DIR "$HOME"/.config/user-dirs.dirs)
-    music_path=${music_path#*\"}
-    music_path=$(eval printf "%s" "${music_path%\"}")
-    mkdir -p "$HOME"/MEGA/Musique
-    ln -fs "$HOME"/MEGA/Musique "$music_path"
+    link_mega_user_dir() {
+        documents_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)
+        documents_path=${documents_path#*\"}
+        documents_path=$(eval printf "%s" "${documents_path%\"}")
+        mkdir -p "$HOME"/MEGA/"$2"
+        ln -fs "$HOME"/MEGA/"$2" "$documents_path"
+    }
+
+    # make xdg's user dirs symlinks pointing to MEGA's dirs
+    link_mega_user_dir DOCUMENTS Documents
+    link_mega_user_dir MUSIC Musique
+    link_mega_user_dir PICTURES Images
+    link_mega_user_dir VIDEOS Vidéos
 
     # add empty text file to xdg's templates dir
     templates_path=$(grep XDG_TEMPLATES_DIR "$HOME"/.config/user-dirs.dirs)
