@@ -106,6 +106,11 @@ gnome_install() {
     sudo cp "$HOME"/.bashrc /root/.bashrc
 
     printf "\nRestoring gnome config\n"
+    printf 'polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.udisks2.filesystem-mount-system") {
+        return polkit.Result.YES;
+    }\n});\n' | sudo tee /etc/polkit-1/rules.d/50-filesystem-mount-system-internal.rules
+
     # gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/gnome/adwaita-timed.xml # use this to set a wallpaper
     gsettings set org.gnome.desktop.interface show-battery-percentage true
     gsettings set org.gnome.desktop.peripherals.keyboard numlock-state true
