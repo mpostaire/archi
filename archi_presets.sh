@@ -53,6 +53,7 @@ gnome_install() {
     services+=(
         cups.socket
         gdm.service
+        bluetooth.service
     )
 
     detect_vdriver
