@@ -21,6 +21,8 @@ pkgs=(
     os-prober
     dosfstools
     pacman-contrib
+    man-pages
+    man-db
 )
 
 services=(
@@ -33,6 +35,7 @@ show_drives() {
     lsblk -po NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,MOUNTPOINTS
 }
 
+# TODO EFI SUPPORT - prompt to ask which drive to put efi partition and it will automatically create it in the beginning of the selected drive
 detect_efi() {
     # EFI detection
     if [ -e /sys/firmware/efi/efivars ]; then
