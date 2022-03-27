@@ -39,7 +39,9 @@ gnome_install() {
         youtube-dl
         wget
         stow
-        discord
+        bat
+	chafa
+	discord
         chrome-gnome-shell
         megasync-bin
         nautilus-megasync
