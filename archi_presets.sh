@@ -34,15 +34,15 @@ gnome_install() {
         ghex
         gnome-software-packagekit-plugin
         bat
-	gdb
+	    gdb
         fzf
         chafa
         youtube-dl
         wget
         stow
         bat
-	chafa
-	discord
+	    chafa
+	    discord
         chrome-gnome-shell
         megasync-bin
         nautilus-megasync
