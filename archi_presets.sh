@@ -34,6 +34,7 @@ gnome_install() {
         ghex
         gnome-software-packagekit-plugin
         bat
+	gdb
         fzf
         chafa
         youtube-dl
