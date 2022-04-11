@@ -80,9 +80,7 @@ gnome_install() {
     printf "Installing 'yay' (AUR helper)\n"
     sudo pacman -S --needed --noconfirm git base-devel
     git clone https://aur.archlinux.org/yay.git
-    cd yay
-    makepkg -csi --noconfirm
-    cd
+    ( cd yay && makepkg -csi --noconfirm )
     rm -rf yay
 
     printf "\nInstalling and updating packages\n"
@@ -102,9 +100,7 @@ gnome_install() {
     printf "\nRestoring dotfiles\n"
     rm -rf dotfiles
     git clone https://github.com/mpostaire/dotfiles.git
-    cd dotfiles
-    stow zsh misc defaultapps
-    cd
+    stow --dir=dotfiles shell defaultapps gtk-bookmarks
     sudo cp -Tr "$HOME"/.zsh/ /root/.zsh
     sudo cp "$HOME"/.zshrc /root/.zshrc
     sudo cp "$HOME"/.bashrc /root/.bashrc
@@ -244,6 +240,6 @@ gnome_install() {
     templates_path=$(eval printf "%s" "${templates_path%\"}")
     touch "$templates_path/Fichier sans titre"
 
-    # create 'MEGA' and 'COURS' bookmarks for nautilus
-    printf "file://%s/MEGA/COURS\nfile://%s/MEGA" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
+    # create 'dev' 'COURS' and 'MEGA' bookmarks for nautilus
+    printf "file://%s/dev\nfile://%s/MEGA/COURS\nfile://%s/MEGA" "$HOME" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
 }
