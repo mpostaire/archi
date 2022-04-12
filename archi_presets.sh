@@ -36,11 +36,10 @@ gnome_install() {
         bat
 	    gdb
         fzf
-        chafa
+        htop
         youtube-dl
         wget
         stow
-        bat
 	    chafa
 	    discord
         chrome-gnome-shell
