@@ -13,6 +13,21 @@ presets=(
     gnome
 )
 
+# first line sets vconsole's color scheme
+# second line sets cursor position to (0,0) and clears the screen
+custom_issue="\e]P0282C34\e]P84F5666\e]P1E05561\e]P9FF616E\e]P28CC265\e]PAA5E075\e]P3D18F52\e]PBF0A45D\e]P44AA5F0\e]PC4DC4FF\e]P5C162DE\e]PDDE73FF\e]P642B3C2\e]PE4CD1E0\e]P7E6E6E6\e]PFABB2BF
+\e[H\e[2J
+        \e[1;36m,\e[1;36m                       _     _ _                      \e[1;30m| \e[34m\s \r
+       \e[1;36m/#\\\\\\e[1;36m        __ _ _ __ ___| |__ | (_)_ __  _   ___  __    \e[30m|
+      \e[1;36m/###\\\\\\e[1;36m      / _\` | '__/ __| '_ \\\\| | | '_ \\\\| | | \\\\ \\\\/ /    \e[30m| \e[32m\t
+     \e[1;36m/#####\\\\\\e[1;36m    | (_| | | | (__| | | | | | | | | |_| |>  <     \e[30m| \e[32m\d
+    \e[1;36m/##\e[0;36m,-,##\\\\\\e[1;36m    \\\\__,_|_|  \\\\___|_| |_|_|_|_| |_|\\\\__,_/_/\\\\_\\\\    \e[1;30m|
+   \e[0;36m/##(   )##\\\\                                                 \e[1;30m| \e[31m\U logged in
+  \e[0;36m/#.--   --.#\\\\\\e[1;37m   A simple, elegant gnu/linux distribution.    \e[1;30m|
+ \e[0;36m/\`           \`\\\\\\e[0m                                               \e[1;30m| \e[35m\l \e[36mon \e[1;33m\n \e[0m
+
+"
+
 gnome_install() {
     pkgs+=(
         gnome
@@ -96,6 +111,9 @@ gnome_install() {
         sudo systemctl enable "$elem"
     done
 
+    printf "\nInstalling custom /etc/issue\n"
+    printf "%s" "${custom_issue}" | sudo tee /etc/issue
+
     printf "\nRestoring dotfiles\n"
     rm -rf dotfiles
     git clone https://github.com/mpostaire/dotfiles.git
@@ -177,7 +195,7 @@ gnome_install() {
     printf "Set GDM keyboard layout and enable touchpad tap-to-click\n"
     sudo -u gdm dbus-launch gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click 'true'
     kbd="us"
-    case "$(cat /etc/vconsole.conf)" in
+    case $(</etc/vconsole.conf) in
         *fr* ) kbd="fr";;
         *be* ) kbd="be";;
         *us* ) kbd="us";;
