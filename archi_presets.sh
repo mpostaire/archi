@@ -15,7 +15,7 @@ presets=(
 
 # first line sets vconsole's color scheme
 # second line sets cursor position to (0,0) and clears the screen
-custom_issue="\e]P0282C34\e]P84F5666\e]P1E05561\e]P9FF616E\e]P28CC265\e]PAA5E075\e]P3D18F52\e]PBF0A45D\e]P44AA5F0\e]PC4DC4FF\e]P5C162DE\e]PDDE73FF\e]P642B3C2\e]PE4CD1E0\e]P7D7DAE0\e]PFABB2BF
+custom_issue="\e]P01D2026\e]P84F5666\e]P1E05561\e]P9FF616E\e]P28CC265\e]PAA5E075\e]P3D18F52\e]PBF0A45D\e]P44AA5F0\e]PC4DC4FF\e]P5C162DE\e]PDDE73FF\e]P642B3C2\e]PE4CD1E0\e]P7D7DAE0\e]PFABB2BF
 \e[H\e[2J
         \e[1;36m,\e[1;36m                       _     _ _                      \e[1;30m| \e[34m\s \r
        \e[1;36m/#\\\\\\e[1;36m        __ _ _ __ ___| |__ | (_)_ __  _   ___  __    \e[30m|
