@@ -91,6 +91,12 @@ gnome_install() {
         y ) pkgs+=(hplip);;
     esac
 
+    local alt_mediakeys
+    read_input_yn "\nSetup alternative media keybindings (useful if there is no dedicated media keys on the keyboard)?" "Y/n"
+    case $ret in
+        y ) alt_mediakeys=1;;
+    esac
+
     printf "Installing 'yay' (AUR helper)\n"
     sudo pacman -S --needed --noconfirm git base-devel
     git clone https://aur.archlinux.org/yay.git
@@ -99,8 +105,8 @@ gnome_install() {
 
     printf "\nInstalling and updating packages\n"
     while ! yay -Syu "${pkgs[@]}" --noconfirm; do
-        printf 
-        read_input_yn "\nRetry?" "Y/n"
+        printf "\nPackage installation failed\n"
+        read_input_yn "Retry?" "Y/n"
         case $ret in
             n ) return 1;;
         esac
@@ -167,11 +173,13 @@ gnome_install() {
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ command 'gnome-system-monitor'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ name 'Moniteur système'
     gsettings set org.gnome.settings-daemon.plugins.media-keys logout "[]"
-    gsettings set org.gnome.settings-daemon.plugins.media-keys next "['<Primary>KP_6']"
-    gsettings set org.gnome.settings-daemon.plugins.media-keys play "['<Primary>KP_Divide']"
-    gsettings set org.gnome.settings-daemon.plugins.media-keys previous "['<Primary>KP_4']"
-    gsettings set org.gnome.settings-daemon.plugins.media-keys stop "['<Primary>KP_5']"
-    gsettings set org.gnome.settings-daemon.plugins.media-keys volume-mute "['<Primary>KP_Multiply']"
+    if [[ -n $alt_mediakeys ]]; then
+        gsettings set org.gnome.settings-daemon.plugins.media-keys next "['<Primary>KP_6']"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys play "['<Primary>KP_Divide']"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys previous "['<Primary>KP_4']"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys stop "['<Primary>KP_5']"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys volume-mute "['<Primary>KP_Multiply']"
+    fi
     gsettings set org.gnome.settings-daemon.plugins.media-keys volume-step 2
 
     # terminal profile
