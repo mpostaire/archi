@@ -255,15 +255,10 @@ gnome_install() {
     link_mega_user_dir MUSIC Musique
     link_mega_user_dir PICTURES Images
     link_mega_user_dir VIDEOS Vidéos
+    link_mega_user_dir TEMPLATES Modèles
 
     # create development working dir
     mkdir -p "$HOME"/dev
-
-    # add empty text file to xdg's templates dir
-    templates_path=$(grep XDG_TEMPLATES_DIR "$HOME"/.config/user-dirs.dirs)
-    templates_path=${templates_path#*\"}
-    templates_path=$(eval printf "%s" "${templates_path%\"}")
-    touch "$templates_path/Fichier sans titre"
 
     # create 'dev' 'COURS' and 'MEGA' bookmarks for nautilus
     printf "file://%s/dev\nfile://%s/MEGA/COURS\nfile://%s/MEGA" "$HOME" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
