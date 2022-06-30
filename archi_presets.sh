@@ -112,6 +112,19 @@ gnome_install() {
         esac
     done
 
+    printf "\nMPTCP setup\n"
+    curl -LJO https://github.com/intel/mptcpd/releases/download/v0.10/mptcpd-0.10.tar.gz
+    tar xvf mptcpd-0.10.tar.gz
+    (
+        cd mptcpd-0.10
+        ./configure
+        make
+        sudo make install
+        systemctl enable mptcp.service
+    )
+    rm -rf mptcpd-0.10.tar.gz mptcpd-0.10
+    services+=(mptcp.service)
+
     printf "\nEnabling services\n"
     for elem in "${services[@]}"; do
         sudo systemctl enable "$elem"
