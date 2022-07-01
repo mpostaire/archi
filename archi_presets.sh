@@ -120,6 +120,7 @@ gnome_install() {
         ./configure
         make
         sudo make install
+        printf "addr-flags=subflow" | sudo tee /usr/local/etc/mptcpd/mptcpd.conf
         systemctl enable mptcp.service
     )
     rm -rf mptcpd-0.10.tar.gz mptcpd-0.10
