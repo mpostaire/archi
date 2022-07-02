@@ -38,6 +38,7 @@ gnome_install() {
         transmission-gtk
         rhythmbox
         thunderbird
+        ttf-ubuntu-font-family
         steam
         mpv
         libreoffice
@@ -210,6 +211,12 @@ gnome_install() {
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ use-system-font false
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ use-theme-colors false
     gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ visible-name 'One Dark'
+
+    # fonts
+    gsettings set org.gnome.desktop.interface font-name "Ubuntu 11"
+    gsettings set org.gnome.desktop.interface document-font-name "Ubuntu 12"
+    gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
+    gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 11"
 
     printf "Disabling Wayland\n"
     sudo sed -i 's/^#WaylandEnable=.*$/WaylandEnable=false/' /etc/gdm/custom.conf
