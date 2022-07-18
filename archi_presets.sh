@@ -47,17 +47,18 @@ gnome_install() {
         ttf-dejavu
         noto-fonts-cjk
         neofetch
+        dnsmasq # needed for gnome's wifi access point to work
         ghex
         gnome-software-packagekit-plugin
         bat
-	    gdb
+        gdb
         fzf
         htop
         youtube-dl
         wget
         stow
-	    chafa
-	    discord
+        chafa
+        discord
         chrome-gnome-shell
         megasync-bin
         nautilus-megasync
