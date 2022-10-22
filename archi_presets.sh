@@ -35,6 +35,7 @@ gnome_install() {
         unrar
         vim
         firefox
+        bluez-plugins # needed for PS3 Sixaxis controller bluetooth
         transmission-gtk
         rhythmbox
         thunderbird
