@@ -36,6 +36,7 @@ gnome_install() {
         vim
         firefox
         bluez-plugins # needed for PS3 Sixaxis controller bluetooth
+        bluez-utils # needed for media control from bluetooth headsets
         transmission-gtk
         rhythmbox
         thunderbird
@@ -133,6 +134,19 @@ gnome_install() {
     for elem in "${services[@]}"; do
         sudo systemctl enable "$elem"
     done
+
+    # Enable headset MPRIS media controls
+    printf "[Unit]
+Description=Forward bluetooth media controls to MPRIS
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mpris-proxy
+
+[Install]
+WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
+
+    systemctl --user enable mpris-proxy.service
 
     printf "\nInstalling custom /etc/issue\n"
     printf "%s" "${custom_issue}" | sudo tee /etc/issue
