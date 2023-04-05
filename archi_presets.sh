@@ -33,7 +33,7 @@ gnome_install() {
         gnome
         cups
         unrar
-        vim
+        nvim
         firefox
         bluez-plugins # needed for PS3 Sixaxis controller bluetooth
         bluez-utils # needed for media control from bluetooth headsets
