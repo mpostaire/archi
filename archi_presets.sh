@@ -59,6 +59,8 @@ gnome_install() {
         youtube-dl
         wget
         stow
+        gamemode
+        lib32-gamemode
         chafa
         discord
         chrome-gnome-shell
