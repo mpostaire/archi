@@ -250,7 +250,7 @@ set_hostname_user_and_passwords() {
 
     arch-chroot /mnt useradd -m -G wheel -s /bin/zsh "$user"
     printf "%s:%s" "$user" "$userpasswd" | arch-chroot /mnt chpasswd
-    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /mnt/etc/sudoers
+    sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /mnt/etc/sudoers
 }
 
 set_shell_timezone_clock_locales() {
