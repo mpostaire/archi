@@ -51,7 +51,7 @@ download_scripts() {
 }
 
 detect_virt() {
-    hypervisor=$(systemd-detect-virt --vm)
+    hypervisor=$(systemd-detect-virt --vm) || true
     case $hypervisor in
         kvm )
             printf "KVM detected\n"
