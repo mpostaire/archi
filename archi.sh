@@ -314,9 +314,9 @@ install_system() {
     done
 
     printf "Generating fstab\n"
-    genfstab -U /mnt >> /mnt/etc/fstab
+    genfstab -U /mnt > /mnt/etc/fstab
     if [ -f /mnt/swapfile ]; then
-        printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" > /mnt/etc/fstab
+        printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /mnt/etc/fstab
     fi
 }
 
