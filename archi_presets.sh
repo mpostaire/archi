@@ -274,12 +274,15 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
 
     link_mega_user_dir() {
-        dir_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)
+        dir_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)  # no such dir?????
         dir_path=${dir_path#*\"}
         dir_path=$(eval printf "%s" "${dir_path%\"}")
         mkdir -p "$HOME"/MEGA/"$2"
         ln -fs "$HOME"/MEGA/"$2" "$dir_path"
     }
+
+    # create "$HOME"/.config/user-dirs.dirs
+    xdg-user-dirs-update
 
     # make xdg's user dirs symlinks pointing to MEGA's dirs
     link_mega_user_dir DOCUMENTS Documents
@@ -292,8 +295,10 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     mkdir -p "$HOME"/dev
 
     # fix blurry gtk4 font rendering
+    mkdir -p "$HOME"/.config/gtk-4.0
     printf "[Settings]\ngtk-hint-font-metrics=true\n" > "$HOME"/.config/gtk-4.0/settings.ini
 
     # create 'dev' 'COURS' and 'MEGA' bookmarks for nautilus
+    mkdir -p "$HOME"/.config/gtk-3.0
     printf "file://%s/dev\nfile://%s/MEGA/COURS\nfile://%s/MEGA" "$HOME" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
 }
