@@ -29,11 +29,11 @@ custom_issue="\e]P01D2026\e]P84F5666\e]P1E05561\e]P9FF616E\e]P28CC265\e]PAA5E075
 "
 
 gnome_install() {
-    pkgs+=(
+    pkgs=(
         gnome
         cups
         unrar
-        nvim
+        neovim
         firefox
         bluez-plugins # needed for PS3 Sixaxis controller bluetooth
         bluez-utils # needed for media control from bluetooth headsets
@@ -44,14 +44,13 @@ gnome_install() {
         steam
         mpv
         libreoffice
-        keepassxc
+        bitwarden
         gparted
         ttf-dejavu
         noto-fonts-cjk
         neofetch
         dnsmasq # needed for gnome's wifi access point to work
         ghex
-        gnome-software-packagekit-plugin
         bat
         gdb
         fzf
@@ -63,17 +62,16 @@ gnome_install() {
         lib32-gamemode
         chafa
         discord
-        chrome-gnome-shell
+        gnome-browser-connector
         megasync-bin
         nautilus-megasync
         rhythmbox-plugin-alternative-toolbar
         ttf-ms-fonts
         visual-studio-code-bin
-        nautilus-admin-git
         gnome-shell-extension-appindicator-git
     )
 
-    services+=(
+    services=(
         cups.socket
         gdm.service
         bluetooth.service
@@ -118,20 +116,6 @@ gnome_install() {
         esac
     done
 
-    printf "\nMPTCP setup\n"
-    curl -LJO https://github.com/intel/mptcpd/releases/download/v0.10/mptcpd-0.10.tar.gz
-    tar xvf mptcpd-0.10.tar.gz
-    (
-        cd mptcpd-0.10
-        ./configure
-        make
-        sudo make install
-        printf "addr-flags=subflow" | sudo tee -a /usr/local/etc/mptcpd/mptcpd.conf
-        systemctl enable mptcp.service
-    )
-    rm -rf mptcpd-0.10.tar.gz mptcpd-0.10
-    services+=(mptcp.service)
-
     printf "\nEnabling services\n"
     for elem in "${services[@]}"; do
         sudo systemctl enable "$elem"
@@ -156,7 +140,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     printf "\nRestoring dotfiles\n"
     rm -rf dotfiles
     git clone https://github.com/mpostaire/dotfiles.git
-    stow --dir=dotfiles shell defaultapps gtk-bookmarks
+    stow --dir=dotfiles shell defaultapps
     sudo cp -Tr "$HOME"/.zsh/ /root/.zsh
     sudo cp "$HOME"/.zshrc /root/.zshrc
     sudo cp "$HOME"/.bashrc /root/.bashrc
@@ -178,10 +162,12 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     gsettings set org.gnome.desktop.wm.keybindings switch-windows-backward "['<Shift><Alt>Tab']"
     gsettings set org.gnome.eog.ui sidebar false
     gsettings set org.gnome.gnome-system-monitor show-whose-processes all
-    gsettings set org.gnome.nautilus.icon-view default-zoom-level standard
+    gsettings set org.gnome.nautilus.icon-view default-zoom-level small
     gsettings set org.gnome.nautilus.preferences show-create-link true
     gsettings set org.gnome.rhythmbox.player play-order random-by-age-and-rating
+    gsettings set org.gnome.rhythmbox.player volume 0.8
     gsettings set org.gnome.rhythmbox.plugins.alternative_toolbar display-type 1
+    gsettings set org.gnome.rhythmbox.plugins.alternative_toolbar volume-control true
     gsettings set org.gnome.rhythmbox.plugins active-plugins "['power-manager', 'audiocd', 'notification', 'rb', 'alternative-toolbar', 'daap', 'mtpdevice', 'replaygain', 'android', 'generic-player', 'mmkeys', 'dbus-media-server', 'iradio', 'audioscrobbler', 'mpris', 'artsearch']"
     gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
     gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-automatic false
@@ -196,11 +182,15 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     gsettings set org.gnome.software download-updates true
     gsettings set org.gnome.software download-updates-notify true
     gsettings set org.gnome.system.location enabled true
+    gsettings set org.gnome.TextEditor restore-session false
+    gsettings set org.gnome.TextEditor show-line-numbers true
+    gsettings set org.gnome.TextEditor indent-style space
+    gsettings set org.gnome.TextEditor tab-width 4
 
     # keybindings
     gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']"
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding '<Primary><Alt>t'
-    gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command 'gnome-terminal'
+    gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command 'kgx'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'Terminal'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ binding '<Primary><Alt>Delete'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ command 'gnome-system-monitor'
@@ -214,21 +204,6 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
         gsettings set org.gnome.settings-daemon.plugins.media-keys volume-mute "['<Primary>KP_Multiply']"
     fi
     gsettings set org.gnome.settings-daemon.plugins.media-keys volume-step 2
-
-    # terminal profile
-    gsettings set org.gnome.Terminal.Legacy.Settings theme-variant dark
-    gsettings set org.gnome.Terminal.ProfilesList default 'd16e38e4-e361-47d5-bc6d-81ac2769dd8c'
-    gsettings set org.gnome.Terminal.ProfilesList list "['d16e38e4-e361-47d5-bc6d-81ac2769dd8c']"
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ audible-bell false
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ background-color '#282c34'
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ bold-color '#ABB2BF'
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ bold-is-bright true
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ font 'DejaVu Sans Mono 10'
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ foreground-color '#abb2bf'
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ palette "['rgb(63,68,81)', 'rgb(224,85,97)', 'rgb(140,194,101)', 'rgb(209,143,82)', 'rgb(74,165,240)', 'rgb(193,98,222)', 'rgb(66,179,194)', 'rgb(230,230,230)', 'rgb(79,86,102)', 'rgb(255,97,110)', 'rgb(165,224,117)', 'rgb(240,164,93)', 'rgb(77,196,255)', 'rgb(222,115,255)', 'rgb(76,209,224)', 'rgb(215,218,224)']"
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ use-system-font false
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ use-theme-colors false
-    gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:d16e38e4-e361-47d5-bc6d-81ac2769dd8c/ visible-name 'One Dark'
 
     # fonts
     gsettings set org.gnome.desktop.interface font-name "Ubuntu 11"
