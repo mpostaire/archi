@@ -98,7 +98,7 @@ gnome_install() {
         y ) pkgs+=(hplip);;
     esac
 
-    local alt_mediakeys
+    local alt_mediakeys=0
     read_input_yn "\nSetup alternative media keybindings (useful if there is no dedicated media keys on the keyboard)?" "Y/n"
     case $ret in
         y ) alt_mediakeys=1;;
@@ -212,7 +212,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ command 'gnome-system-monitor'
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ name 'Moniteur système'
     gsettings set org.gnome.settings-daemon.plugins.media-keys logout "[]"
-    if [[ -n $alt_mediakeys ]]; then
+    if [[ $alt_mediakeys = 1 ]]; then
         gsettings set org.gnome.settings-daemon.plugins.media-keys next "['<Primary>KP_6']"
         gsettings set org.gnome.settings-daemon.plugins.media-keys play "['<Primary>KP_Divide']"
         gsettings set org.gnome.settings-daemon.plugins.media-keys previous "['<Primary>KP_4']"
