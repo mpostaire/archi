@@ -278,7 +278,6 @@ EOF
 install_system() {
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
-    /bin/cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* )
@@ -304,6 +303,7 @@ install_system() {
     printf "Updating pacman config\n"
     sed -i 's/#Color/Color/;s/^#ParallelDownloads.*$/ParallelDownloads = 5/;s/#\[multilib\]/\[multilib\]/;/\[multilib]/{n;s/#Include/Include/}' /mnt/etc/pacman.conf
     printf '[Trigger]\nOperation = Remove\nOperation = Upgrade\nType = Package\nTarget = *\n\n[Action]\nDescription = Removing old cached packages...\nWhen = PostTransaction\nExec = /usr/bin/env bash -c "/usr/bin/paccache -rk2; /usr/bin/paccache -ruk0"' > /mnt/usr/share/libalpm/hooks/clear-cache.hook
+    /bin/cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 
     set_hostname_user_and_passwords
     set_shell_timezone_clock_locales
