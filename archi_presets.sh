@@ -154,7 +154,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     printf "%s" "${custom_issue}" | sudo tee /etc/issue
 
     printf "\nRestoring dotfiles\n"
-    rm -rf dotfiles
+    rm -rf dotfiles .bashrc
     git clone https://github.com/mpostaire/dotfiles.git
     stow --dir=dotfiles shell defaultapps
     sudo cp -Tr "$HOME"/.zsh/ /root/.zsh
