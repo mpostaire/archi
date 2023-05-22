@@ -19,8 +19,7 @@ welcome() {
     preset=$(cat "$HOME"/archi/preset)
     printf "Proceeding installation of the '%s' preset (you may be asked for your password several times)\n\n" "$preset"
 
-    printf "Installing 'archlinux-keyring'\n"
-    sudo pacman -Sy --noconfirm archlinux-keyring
+    update_pkg_db
 
     # shellcheck source=archi_presets.sh
     source "$HOME"/archi/archi_presets.sh

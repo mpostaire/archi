@@ -124,3 +124,9 @@ detect_vdriver() {
 		ret="none"
 	fi
 }
+
+update_pkg_db() {
+    printf "Updating packages database\n"
+    sudo pacman -Syy
+    sudo pacman -Syuu
+}
