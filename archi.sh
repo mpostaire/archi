@@ -278,6 +278,7 @@ EOF
 install_system() {
     printf "Ranking mirrors\n"
     reflector --save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate
+    /bin/cp -f /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 
     case $(grep vendor_id /proc/cpuinfo) in
         *GenuineIntel* )
@@ -307,7 +308,7 @@ install_system() {
     set_hostname_user_and_passwords
     set_shell_timezone_clock_locales
 
-    printf -- "--save /etc/pacman.d/mirrorlist --protocol https --country BE,DE,FR,GB --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
+    printf -- "--save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
     printf "Enabling services\n"
     for elem in "${services[@]}"; do
         systemctl enable "$elem" --root=/mnt
