@@ -137,6 +137,7 @@ gnome_install() {
     done
 
     # Enable headset MPRIS media controls
+    mkdir -p "$HOME"/.config/systemd/user/
     printf "[Unit]
 Description=Forward bluetooth media controls to MPRIS
 
