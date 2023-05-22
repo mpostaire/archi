@@ -274,7 +274,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
 
     link_mega_user_dir() {
-        dir_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)  # no such dir?????
+        dir_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)
         dir_path=${dir_path#*\"}
         dir_path=$(eval printf "%s" "${dir_path%\"}")
         mkdir -p "$HOME"/MEGA/"$2"
