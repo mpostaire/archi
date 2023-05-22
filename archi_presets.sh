@@ -270,6 +270,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     fi
 
     # autostart MEGA
+    mkdir -p "$HOME"/.config/autostart
     cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
 
     link_mega_user_dir() {
