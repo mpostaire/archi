@@ -324,7 +324,7 @@ install_system() {
 install_grub() {
     printf "Installing GRUB\n"
 
-    # If we didn't find the gub default config earlier, ask to edit here.
+    # If we didn't find the grub default config earlier, ask to edit here.
     if [ ! -f grub.template ]; then
         sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /mnt/etc/default/grub
         sed -ri 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub

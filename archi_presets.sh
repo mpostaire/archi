@@ -62,12 +62,15 @@ gnome_install() {
         lib32-gamemode
         chafa
         discord
-        gnome-browser-connector
+    )
+
+    aur_pkgs=(
         megasync-bin
         nautilus-megasync
         rhythmbox-plugin-alternative-toolbar
         ttf-ms-fonts
         visual-studio-code-bin
+        gnome-browser-connector
         gnome-shell-extension-appindicator-git
     )
 
@@ -108,13 +111,25 @@ gnome_install() {
     rm -rf yay
 
     printf "\nInstalling and updating packages\n"
-    while ! yay -Syu "${pkgs[@]}" --noconfirm; do
-        printf "\nPackage installation failed\n"
+    while ! sudo pacman -Syu --noconfirm "${pkgs[@]}"; do
+        printf "\nPackages installation failed\n"
         read_input_yn "Retry?" "Y/n"
         case $ret in
             n ) return 1;;
         esac
     done
+
+    printf "\nInstalling AUR packages\n"
+    while ! yay -Syu --noconfirm "${aur_pkgs[@]}"; do
+        printf "\nAUR packages installation failed\n"
+        read_input_yn "Retry?" "Y/n"
+        case $ret in
+            n ) return 1;;
+        esac
+    done
+
+    printf "\nRemoving unwanted packages\n"
+    sudo pacman -Rs --noconfirm gnome-music
 
     printf "\nEnabling services\n"
     for elem in "${services[@]}"; do
