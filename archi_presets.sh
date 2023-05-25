@@ -280,26 +280,28 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     cp /usr/share/applications/megasync.desktop "$HOME"/.config/autostart/megasync.desktop
 
     link_mega_user_dir() {
-        dir_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)
-        dir_path=${dir_path#*\"}
-        dir_path=$(eval printf "%s" "${dir_path%\"}")
-        mkdir -p "$HOME"/MEGA/"$2"
-        rm -rf "${dir_path%/*}"
-        ln -fs "$HOME"/MEGA/"$2" "${dir_path%/*}"
+        dest_path=$(grep XDG_"$1"_DIR "$HOME"/.config/user-dirs.dirs)
+        dest_path=${dest_path#*=}
+        dest_path="${dest_path%\"}"
+        dest_path="${dest_path#\"}"
+        mega_path=$(eval printf "%s" "${dest_path/\$HOME/\$HOME\/MEGA}")
+        dest_path=$(eval printf "%s" "$dest_path")
+        mkdir -p "$mega_path"
+        ln -fs "$mega_path" "$dest_path"
     }
 
     # create "$HOME"/.config/user-dirs.dirs
     xdg-user-dirs-update
 
     # make xdg's user dirs symlinks pointing to MEGA's dirs
-    link_mega_user_dir DOCUMENTS Documents
-    link_mega_user_dir MUSIC Musique
-    link_mega_user_dir PICTURES Images
-    link_mega_user_dir VIDEOS Vidéos
-    link_mega_user_dir TEMPLATES Modèles
+    link_mega_user_dir DOCUMENTS
+    link_mega_user_dir MUSIC
+    link_mega_user_dir PICTURES
+    link_mega_user_dir VIDEOS
+    link_mega_user_dir TEMPLATES
 
     # create development working dir
-    mkdir -p "$HOME"/dev
+    mkdir -p "$HOME"/dev 
 
     # fix blurry gtk4 font rendering
     mkdir -p "$HOME"/.config/gtk-4.0
