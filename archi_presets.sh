@@ -63,6 +63,11 @@ gnome_install() {
         chafa
         discord
         gst-plugin-pipewire # needed for gnome's screen capture to work
+        piwpewire-alsa
+        piwpewire-pulse
+        piwpewire-jack
+        piwpewire-audio
+        wireplumber
     )
 
     aur_pkgs=(
