@@ -62,6 +62,7 @@ gnome_install() {
         lib32-gamemode
         chafa
         discord
+        gst-plugin-pipewire # needed for gnome's screen capture to work
     )
 
     aur_pkgs=(
