@@ -284,8 +284,8 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
         dest_path=${dest_path#*=}
         dest_path="${dest_path%\"}"
         dest_path="${dest_path#\"}"
-        mega_path=$(eval printf "%s" "${dest_path/\$HOME/\$HOME\/MEGA}")
-        dest_path=$(eval printf "%s" "$dest_path")
+        mega_path=$(printf "%s" "${dest_path/\$HOME/\$HOME\/MEGA}")
+        dest_path=$(printf "%s" "$dest_path")
         mkdir -p "$mega_path"
         ln -fs "$mega_path" "$dest_path"
     }
