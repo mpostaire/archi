@@ -288,7 +288,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
         dest_path=$(printf "%s" "$dest_path")
         mkdir -p "$mega_path"
         rm -rf "$dest_path"
-        ln -s "$mega_path" "$dest_path"
+        ln -Ts "$mega_path" "$dest_path"
     }
 
     # create "$HOME"/.config/user-dirs.dirs
