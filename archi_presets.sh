@@ -284,7 +284,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
         dir_path=${dir_path#*\"}
         dir_path=$(eval printf "%s" "${dir_path%\"}")
         mkdir -p "$HOME"/MEGA/"$2"
-        ln -fs "$HOME"/MEGA/"$2" "$dir_path"
+        ln -fs "$HOME"/MEGA/"$2" "${dir_path%/*}"
     }
 
     # create "$HOME"/.config/user-dirs.dirs
