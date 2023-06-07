@@ -68,6 +68,7 @@ gnome_install() {
         pipewire-jack
         pipewire-audio
         wireplumber
+        power-profiles-daemon # needed for gnome's power profiles to work
     )
 
     aur_pkgs=(
