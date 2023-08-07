@@ -55,7 +55,7 @@ gnome_install() {
         gdb
         fzf
         htop
-        youtube-dl
+        yt-dlp
         wget
         stow
         gamemode
