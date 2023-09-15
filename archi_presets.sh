@@ -69,6 +69,7 @@ gnome_install() {
         pipewire-audio
         wireplumber
         power-profiles-daemon # needed for gnome's power profiles to work
+        exfatprogs
     )
 
     aur_pkgs=(
