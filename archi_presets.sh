@@ -211,6 +211,8 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     gsettings set org.gnome.TextEditor show-line-numbers true
     gsettings set org.gnome.TextEditor indent-style space
     gsettings set org.gnome.TextEditor tab-width 4
+    gsettings set org.gnome.Console audible-bell false
+    gsettings set org.gnome.Console visual-bell false
 
     # keybindings
     gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']"
