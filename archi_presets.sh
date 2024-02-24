@@ -58,6 +58,7 @@ gnome_install() {
         yt-dlp
         wget
         stow
+        kernel-modules-hook
         gamemode
         lib32-gamemode
         chafa
@@ -87,6 +88,7 @@ gnome_install() {
         cups.socket
         gdm.service
         bluetooth.service
+        linux-modules-cleanup.service
     )
 
     detect_vdriver
