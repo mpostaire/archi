@@ -273,8 +273,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     }\n});\n' "$USER" | sudo tee /etc/polkit-1/rules.d/90-corectrl.rules
 
         printf "Unlocking full AMD GPU controls\n"
-        sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="[^"]*/& amdgpu.ppfeaturemask=0xffffffff/' /etc/default/grub
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
+        sudo sed -i '/options *root=/ s/$/ amdgpu.ppfeaturemask=0xffffffff/' /boot/loader/entries/00-arch.conf
     fi
 
     if command -v hp-setup &> /dev/null; then

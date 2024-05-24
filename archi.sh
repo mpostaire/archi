@@ -12,7 +12,7 @@ pkgs=(
     linux-firmware
     linux-headers
     networkmanager
-    grub
+    memtest86+-efi
     reflector
     zsh
     nano
@@ -32,14 +32,13 @@ services=(
 )
 
 show_drives() {
-    lsblk -po NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,MOUNTPOINTS
+    lsblk -pno NAME,RM,SIZE,RO,TYPE,PTTYPE,FSTYPE,PARTTYPENAME,MOUNTPOINTS
 }
 
-# TODO EFI SUPPORT - prompt to ask which drive to put efi partition and it will automatically create it in the beginning of the selected drive
 detect_efi() {
     # EFI detection
-    if [ -e /sys/firmware/efi/efivars ]; then
-        printf "This install script only supports BIOS mode for now.\n"
+    if [ ! -e /sys/firmware/efi/efivars ]; then
+        printf "This install script only supports EFI mode.\n"
         exit 1
     fi
 }
@@ -97,14 +96,42 @@ wipe_ptables() {
     done
 }
 
+get_efi_part() {
+    mapfile -t tmp < <(lsblk -pno NAME --filter 'PARTTYPENAME == "EFI System"')
+    ret=${tmp:-}
+    if [ -n "${ret}" ]; then
+        ret="${ret[0]}"
+    fi
+}
+
 partition_drives() {
+    get_efi_part
+
+    if [ -n "$ret" ]; then
+        printf "\nDetected EFI partition: %s\n" "$ret"
+    else
+        while true; do
+            show_drives
+            read_input "\nEnter a drive to create a EFI partition ('/dev/sda' for example):"
+            case $ret in
+                * )
+                    sgdisk "$ret" -n 1::+512MiB -t 1:ef00
+                    sleep 1 # give time for lsblk to show updated fs
+                    get_efi_part
+                    mkfs.fat -F 32 "$ret"
+                    next
+                    break;;
+            esac
+        done
+    fi
+
     while true; do
         show_drives
         read_input "\nEnter a drive to partition ('/dev/sda' for example) and type 'done' when there is nothing else to do:"
         case $ret in
             done ) break;;
             * )
-                if ! cfdisk "$ret"; then
+                if ! cgdisk "$ret"; then
                     printf "Invalid input.\n\n"
                 fi
                 next;;
@@ -132,10 +159,15 @@ mount_filesystems() {
         show_drives
         read_input "\nEnter the partition to use as root volume ('/dev/sda1' for example):"
         if mount "$ret" /mnt; then
+            root_partition="$ret"
             break
         fi
         printf "Invalid input.\n\n"
     done
+
+    get_efi_part
+    mkdir -p /mnt/boot
+    mount "$ret" /mnt/boot
 
     next
 
@@ -156,21 +188,6 @@ mount_filesystems() {
             * ) printf "Invalid input.\n\n";;
         esac
     done
-}
-
-ask_grub() {
-    choose "Select the drive where GRUB will be installed" "$(lsblk -dpnI 8,255 -o NAME)"
-    grub_drive="$ret"
-
-    if [ -f /etc/default/grub ]; then
-        /bin/cp /etc/default/grub grub.template
-        sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' grub.template
-        sed -ri 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' grub.template
-        read_input_yn "\nEdit GRUB config?" "y/N"
-        case $ret in
-            y ) nano grub.template;;
-        esac
-    fi
 }
 
 setup_swapfile() {
@@ -308,35 +325,33 @@ install_system() {
     set_shell_timezone_clock_locales
 
     printf -- "--save /etc/pacman.d/mirrorlist --protocol https --latest 10 --sort rate" > /mnt/etc/xdg/reflector/reflector.conf
-    printf "Enabling services\n"
-    for elem in "${services[@]}"; do
-        systemctl enable "$elem" --root=/mnt
-    done
 
     printf "Generating fstab\n"
     genfstab -U /mnt > /mnt/etc/fstab
     if [ -f /mnt/swapfile ]; then
         printf "\n# swapfile\n/swapfile none swap defaults 0 0\n" >> /mnt/etc/fstab
     fi
-}
 
-install_grub() {
-    printf "Installing GRUB\n"
+    printf "Installing systemd-boot\n"
+    bootctl --esp-path=/mnt/boot install
+    services+=(systemd-boot-update.service)
+    printf "default      @saved
+timeout      4
+console-mode max
+editor       no\n" > /mnt/boot/loader/loader.conf
+    printf "title    Arch Linux
+linux    /vmlinuz-linux
+initrd   /initramfs-linux.img
+sort-key 01
+options  root=%s rw\n" "$root_partition" > /mnt/boot/loader/entries/00-arch.conf
+    printf "title    Memtest86+
+sort-key 02
+efi      /memtest86+/memtest.efi\n" > /mnt/boot/loader/entries/10-memtest.conf
 
-    # If we didn't find the grub default config earlier, ask to edit here.
-    if [ ! -f grub.template ]; then
-        sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/;' /mnt/etc/default/grub
-        sed -ri 's/GRUB_CMDLINE_LINUX_DEFAULT=".+"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /mnt/etc/default/grub
-        read_input_yn "\nEdit GRUB config?" "y/N"
-        case $ret in
-            y ) nano /mnt/etc/default/grub;;
-        esac
-    else
-        /bin/cp grub.template /mnt/etc/default/grub
-    fi
-
-    arch-chroot /mnt grub-install --target=i386-pc "$grub_drive"
-    arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
+    printf "Enabling services\n"
+    for elem in "${services[@]}"; do
+        systemctl enable "$elem" --root=/mnt
+    done
 }
 
 prepare_first_reboot() {
@@ -389,8 +404,6 @@ format_partitions
 next
 mount_filesystems
 next
-ask_grub
-next
 setup_swapfile
 next
 ask_hostname
@@ -403,7 +416,6 @@ ask_preset
 next
 install_system
 next
-install_grub
 prepare_first_reboot
 next
 epilogue
