@@ -187,7 +187,6 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     gsettings set org.gnome.desktop.wm.keybindings switch-applications-backward "['<Shift><Super>Tab']"
     gsettings set org.gnome.desktop.wm.keybindings switch-windows "['<Alt>Tab']"
     gsettings set org.gnome.desktop.wm.keybindings switch-windows-backward "['<Shift><Alt>Tab']"
-    gsettings set org.gnome.eog.ui sidebar false
     gsettings set org.gnome.gnome-system-monitor show-whose-processes all
     gsettings set org.gnome.nautilus.icon-view default-zoom-level small
     gsettings set org.gnome.nautilus.preferences show-create-link true
