@@ -259,7 +259,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     if command -v corectrl &> /dev/null; then
         printf "\nRestoring corectrl config\n"
         # TODO restore profile
-        cp /usr/share/applications/org.corectrl.corectrl.desktop "$HOME"/.config/autostart/org.corectrl.corectrl.desktop
+        cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME"/.config/autostart/org.corectrl.CoreCtrl.desktop
 
         printf "Adding corectrl polkit rule\n"
         printf 'polkit.addRule(function(action, subject) {
