@@ -72,6 +72,7 @@ gnome_install() {
         power-profiles-daemon # needed for gnome's power profiles to work
         dosfstools
         exfatprogs
+        tailscale
     )
 
     aur_pkgs=(
@@ -84,11 +85,17 @@ gnome_install() {
         gnome-shell-extension-appindicator-git
     )
 
+    flatpak_pkgs=(
+        com.github.iwalton3.jellyfin-media-player
+    )
+
     services=(
         cups.socket
         gdm.service
         bluetooth.service
         linux-modules-cleanup.service
+        systemd-resolved.service
+        tailscaled.service
     )
 
     detect_vdriver
@@ -139,6 +146,15 @@ gnome_install() {
         esac
     done
 
+    printf "\nInstalling flatpak packages\n"
+    while ! flatpak install flathub -y "${flatpak_pkgs[@]}"; do
+        printf "\nFlatpak packages installation failed\n"
+        read_input_yn "Retry?" "Y/n"
+        case $ret in
+            n ) return 1;;
+        esac
+    done
+
     printf "\nRemoving unwanted packages\n"
     sudo pacman -Rs --noconfirm gnome-music
 
@@ -146,6 +162,9 @@ gnome_install() {
     for elem in "${services[@]}"; do
         sudo systemctl enable "$elem"
     done
+
+    printf "\nFinishing systemd-resolved setup\n
+    ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
     # Enable headset MPRIS media controls
     mkdir -p "$HOME"/.config/systemd/user/
@@ -203,7 +222,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type nothing
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-timeout 900
     gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
-    gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Software.desktop', 'thunderbird.desktop', 'visual-studio-code.desktop', 'rhythmbox.desktop', 'steam.desktop', 'org.gnome.Calendar.desktop']"
+    gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Software.desktop', 'org.mozilla.Thunderbird.desktop', 'code.desktop', 'org.gnome.Rhythmbox3.desktop', 'steam.desktop', 'org.gnome.Calendar.desktop']"
     gsettings set org.gnome.shell.weather automatic-location true
     gsettings set org.gnome.software download-updates true
     gsettings set org.gnome.software download-updates-notify true
@@ -230,6 +249,8 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
         gsettings set org.gnome.settings-daemon.plugins.media-keys previous "['<Primary>KP_4']"
         gsettings set org.gnome.settings-daemon.plugins.media-keys stop "['<Primary>KP_5']"
         gsettings set org.gnome.settings-daemon.plugins.media-keys volume-mute "['<Primary>KP_Multiply']"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys volume-up "['<Primary>KP_Add']"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys volume-down "['<Primary>KP_Subtract']"
     fi
     gsettings set org.gnome.settings-daemon.plugins.media-keys volume-step 2
 
@@ -314,7 +335,7 @@ WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
     mkdir -p "$HOME"/.config/gtk-4.0
     printf "[Settings]\ngtk-hint-font-metrics=true\n" > "$HOME"/.config/gtk-4.0/settings.ini
 
-    # create 'dev' 'COURS' and 'MEGA' bookmarks for nautilus
+    # create 'dev' and 'MEGA' bookmarks for nautilus
     mkdir -p "$HOME"/.config/gtk-3.0
-    printf "file://%s/dev\nfile://%s/MEGA/COURS\nfile://%s/MEGA" "$HOME" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
+    printf "file://%s/dev\nfile://%s/MEGA" "$HOME" "$HOME" >> "$HOME"/.config/gtk-3.0/bookmarks
 }
