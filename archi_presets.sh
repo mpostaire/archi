@@ -166,19 +166,8 @@ gnome_install() {
     printf "\nFinishing systemd-resolved setup\n
     ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
-    # Enable headset MPRIS media controls
-    mkdir -p "$HOME"/.config/systemd/user/
-    printf "[Unit]
-Description=Forward bluetooth media controls to MPRIS
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/mpris-proxy
-
-[Install]
-WantedBy=default.target\n" > "$HOME"/.config/systemd/user/mpris-proxy.service
-
-    systemctl --user enable mpris-proxy.service
+    # enables ssh password popup with gnome-keyring
+    systemctl --user enable gcr-ssh-agent.socket
 
     printf "\nInstalling custom /etc/issue\n"
     printf "%s" "${custom_issue}" | sudo tee /etc/issue
