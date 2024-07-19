@@ -164,7 +164,8 @@ gnome_install() {
     done
 
     printf "\nFinishing systemd-resolved setup\n"
-    ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+    systemctl start systemd-resolved
+    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
     # enables ssh password popup with gnome-keyring
     systemctl --user enable gcr-ssh-agent.socket
@@ -260,6 +261,7 @@ gnome_install() {
         *be* ) kbd="be";;
         *us* ) kbd="us";;
     esac
+    sudo mkdir -p /etc/X11/xorg.conf.d
     printf 'Section "InputClass"
         Identifier "system-keyboard"
         MatchIsKeyboard "on"
