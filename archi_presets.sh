@@ -163,7 +163,7 @@ gnome_install() {
         sudo systemctl enable "$elem"
     done
 
-    printf "\nFinishing systemd-resolved setup\n
+    printf "\nFinishing systemd-resolved setup\n"
     ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
     # enables ssh password popup with gnome-keyring
