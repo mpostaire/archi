@@ -322,9 +322,9 @@ gnome_install() {
     # create development working dir
     mkdir -p "$HOME"/dev 
 
-    # fix blurry gtk4 font rendering
-    mkdir -p "$HOME"/.config/gtk-4.0
-    printf "[Settings]\ngtk-hint-font-metrics=true\n" > "$HOME"/.config/gtk-4.0/settings.ini
+    # fix blurry gtk4 font rendering (not needed anymore)
+    #mkdir -p "$HOME"/.config/gtk-4.0
+    #printf "[Settings]\ngtk-hint-font-metrics=true\n" > "$HOME"/.config/gtk-4.0/settings.ini
 
     # create 'dev' and 'MEGA' bookmarks for nautilus
     mkdir -p "$HOME"/.config/gtk-3.0
