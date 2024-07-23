@@ -102,18 +102,13 @@ gnome_install() {
     # shellcheck disable=SC2154 # this script is never called directly but sourced in a script containing the necessary functions
     case $ret in
         xf86-video-amdgpu )
-            pkgs+=("$ret" vulkan-radeon)
+            pkgs+=("$ret" vulkan-radeon libva-mesa-driver)
             read_input_yn "\nInstall 'corectrl' (AMD GPU OC utility)?" "Y/n"
             case $ret in
                 y ) pkgs+=(corectrl);;
             esac;;
         none ) ;;
         * ) pkgs+=("$ret");;
-    esac
-
-    read_input_yn "\nInstall 'hplip' (HP DeskJet, OfficeJet, Photosmart, Business Inkjet and some LaserJet driver)?" "Y/n"
-    case $ret in
-        y ) pkgs+=(hplip);;
     esac
 
     local alt_mediakeys=0
@@ -182,10 +177,6 @@ gnome_install() {
     sudo cp "$HOME"/.bashrc /root/.bashrc
 
     printf "\nRestoring gnome config\n"
-    printf 'polkit.addRule(function(action, subject) {
-    if (action.id == "org.freedesktop.udisks2.filesystem-mount-system") {
-        return polkit.Result.YES;
-    }\n});\n' | sudo tee /etc/polkit-1/rules.d/50-filesystem-mount-system-internal.rules
 
     # gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/gnome/adwaita-timed.xml # use this to set a wallpaper
     gsettings set org.gnome.desktop.interface show-battery-percentage true
@@ -250,23 +241,8 @@ gnome_install() {
     gsettings set org.gnome.desktop.interface monospace-font-name "Ubuntu Mono 12"
     gsettings set org.gnome.desktop.wm.preferences titlebar-font "Ubuntu Bold 11"
 
-    printf "Disabling Wayland\n"
-    sudo sed -i 's/^#WaylandEnable=.*$/WaylandEnable=false/' /etc/gdm/custom.conf
-
     printf "Set GDM keyboard layout and enable touchpad tap-to-click\n"
     sudo -u gdm dbus-launch gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click 'true'
-    kbd="us"
-    case $(</etc/vconsole.conf) in
-        *fr* ) kbd="fr";;
-        *be* ) kbd="be";;
-        *us* ) kbd="us";;
-    esac
-    sudo mkdir -p /etc/X11/xorg.conf.d
-    printf 'Section "InputClass"
-        Identifier "system-keyboard"
-        MatchIsKeyboard "on"
-        Option "XkbLayout" "%s"\nEndSection' "$kbd" | sudo tee /etc/X11/xorg.conf.d/00-keyboard.conf
-
 
     if command -v corectrl &> /dev/null; then
         printf "\nRestoring corectrl config\n"
@@ -286,11 +262,6 @@ gnome_install() {
 
         printf "Unlocking full AMD GPU controls\n"
         sudo sed -i '/options *root=/ s/$/ amdgpu.ppfeaturemask=0xffffffff/' /boot/loader/entries/00-arch.conf
-    fi
-
-    if command -v hp-setup &> /dev/null; then
-        printf "\nInitializing hplip\n"
-        hp-setup -i
     fi
 
     # autostart MEGA
