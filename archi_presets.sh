@@ -73,6 +73,7 @@ gnome_install() {
         dosfstools
         exfatprogs
         tailscale
+        gnome-shell-extension-appindicator
     )
 
     aur_pkgs=(
@@ -82,7 +83,6 @@ gnome_install() {
         ttf-ms-fonts
         visual-studio-code-bin
         gnome-browser-connector
-        gnome-shell-extension-appindicator-git
     )
 
     flatpak_pkgs=(
